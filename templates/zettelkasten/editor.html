@@ -1,0 +1,12 @@
+<form method="post" style="width: 100%; height: 90%;">
+    {% csrf_token %}
+    {{ form.title }}
+
+
+    <textarea id="markdown-input" name="content" style="width: 100%; height: 100%;">
+        {{ form.initial.content }}
+    </textarea>
+
+
+    <button type='button' id="save-zettel-btn">💾 Save</button>
+</form>

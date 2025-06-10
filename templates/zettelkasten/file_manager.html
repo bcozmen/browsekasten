@@ -1,0 +1,36 @@
+<div class="file-manager">
+    <div class="folder">
+        <div class ="folder-bar">
+            <button title="add file" class="btn" onclick="addEmptyZettel()">➕</span>
+        </div>
+        <div class="folder-header" data-type="folder" data-id="documents">
+            <span class="folder-icon">📁</span>
+            <span class="folder-name">Documents</span>
+        </div>
+        
+        <div class="folder-content">
+            {% for zettel in zettels %}
+            <div class="document" data-type="document" data-id="{{ zettel.id }}">
+                <span class="document-icon">📄</span>
+                <span class="document-name">{{ zettel.title }}</span>
+            </div>
+            {% endfor %}
+
+            <div id="customMenu" style="
+                display: none;
+                position: absolute;
+                background: white;
+                border: 1px solid #ccc;
+                box-shadow: 2px 2px 6px rgba(0,0,0,0.2);
+                padding: 10px;
+                z-index: 1000;
+                ">
+                <ul style="list-style:none; margin:0; padding:0;">
+                    <li><button onclick="alert('Option 1 clicked')">Option 1</button></li>
+                    <li><button onclick="alert('Option 2 clicked')">Option 2</button></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+

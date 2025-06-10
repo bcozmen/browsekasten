@@ -1,0 +1,119 @@
+/* ==========================================================================
+   Zettelkasten Layout
+   ========================================================================== */
+/* Override main element for full width */
+
+.zettelkasten-container {
+    display: flex;
+    height: calc(100vh - 100px);
+    width: 100%;
+    max-width: 100%;
+    background-color: var(--bg-primary);
+    padding: var(--spacing-md);
+    gap: 0;
+    margin: 0 auto;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+}
+
+.column {
+    background-color: var(--text-light);
+    padding: var(--spacing-md);
+    overflow: auto;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--ui-border);
+    min-width: 100px;
+    flex: 0 0 auto; /* Don't grow or shrink, use explicit width */
+}
+
+.resizer {
+    width: 5px;
+    background-color: var(--bg-secondary);
+    cursor: col-resize;
+    transition: background-color var(--transition-fast);
+    border-radius: var(--radius-sm);
+    user-select: none;
+    flex: 0 0 auto; /* Don't grow or shrink */
+}
+
+.resizer:hover {
+    background-color: var(--primary-200);
+}
+
+/* Content styling */
+.column .content {
+    color: var(--text-secondary);
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+.file-manager {
+    padding: 1rem;
+    font-family: system-ui, -apple-system, sans-serif;
+}
+
+.folder {
+    margin: 0.5rem 0;
+}
+
+.folder-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 4px;
+    user-select: none;
+    width: fit-content;
+}
+
+.folder-header:hover,
+.folder-header.selected {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.folder-header.selected {
+    background-color: rgba(0, 0, 0, 0.1);
+    font-weight: 500;
+}
+
+.folder-content {
+    margin-left: 1.5rem;
+    border-left: 1px solid #e0e0e0;
+    padding-left: 0.5rem;
+}
+
+.document {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem;
+    margin: 0.25rem 0;
+    cursor: pointer;
+    border-radius: 4px;
+    user-select: none;
+    width: fit-content;
+}
+
+.document:hover,
+.document.selected {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.document.selected {
+    background-color: rgba(0, 0, 0, 0.1);
+    font-weight: 500;
+}
+
+.folder-icon, .document-icon {
+    font-size: 1.2rem;
+    width: 1.5rem;
+    text-align: center;
+}
+
+.folder-name, .document-name {
+    font-size: 0.9rem;
+    color: #333;
+    white-space: nowrap;
+}

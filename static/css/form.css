@@ -1,0 +1,58 @@
+/* ==========================================================================
+   Forms
+   ========================================================================== */
+   .form {
+    width: 100%;
+}
+
+.form-header {
+    margin-bottom: var(--spacing-xl);
+}
+
+.form-title {
+    color: var(--primary-900);
+    margin-bottom: var(--spacing-sm);
+    text-align: center;
+}
+
+.form-subtitle {
+    color: var(--text-secondary);
+    text-align: center;
+    margin-bottom: var(--spacing-xl);
+}
+
+.form-group {
+    margin-bottom: var(--spacing-lg);
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: var(--spacing-sm);
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.form-group input {
+    width: 100%;
+    padding: var(--spacing-md);
+    border: 1px solid var(--ui-border);
+    border-radius: var(--radius-md);
+    background-color: var(--bg-primary);
+    transition: all var(--transition-normal);
+}
+
+.form-group input:focus {
+    border-color: var(--primary-600);
+    box-shadow: 0 0 0 2px var(--primary-200);
+    outline: none;
+}
+
+.form-actions {
+    margin-top: var(--spacing-xl);
+    text-align: center;
+}
+
+.form-links {
+    margin-top: var(--spacing-lg);
+    text-align: center;
+}

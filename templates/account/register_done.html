@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Welcome{% endblock %}
+
+{% block content %}
+    <div class="container-auth">
+        <div class="card card-center">
+            <div class="form-header">
+                <h1 class="form-title">Welcome!</h1>
+                <div class="form-subtitle">
+                    <p>Your account has been successfully created.</p>
+                    <p>Now you can <a href="{% url 'login' %}" >log in</a>.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %} 

@@ -48,14 +48,9 @@
     line-height: 1.6;
 }
 
-.file-manager {
-    padding: 1rem;
-    font-family: system-ui, -apple-system, sans-serif;
-}
 
-.folder {
-    margin: 0.5rem 0;
-}
+
+
 
 .folder-header {
     display: flex;

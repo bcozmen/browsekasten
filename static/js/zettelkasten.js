@@ -1,75 +1,71 @@
-//resize functionality
-document.addEventListener('DOMContentLoaded', function() {
-    const resizers = document.querySelectorAll('.resizer');
-    const columns = document.querySelectorAll('.column');
-    
-    // Load saved widths from localStorage
-    columns.forEach(column => {
-        const savedWidth = localStorage.getItem(`column-width-${column.id}`);
-        if (savedWidth) {
-            column.style.width = savedWidth;
-        }
-    });
-    
-    let isResizing = false;
-    let currentResizer;
-    let prevColumn;
-    let nextColumn;
-    let prevColumnWidth;
-    let nextColumnWidth;
-    let startX;
-
-    resizers.forEach(resizer => {
-        resizer.addEventListener('mousedown', initResize);
-    });
-
-    function initResize(e) {
-        isResizing = true;
-        currentResizer = e.target;
-        prevColumn = currentResizer.previousElementSibling;
-        nextColumn = currentResizer.nextElementSibling;
-        startX = e.pageX;
-
-        prevColumnWidth = prevColumn.offsetWidth;
-        nextColumnWidth = nextColumn.offsetWidth;
-
-        document.addEventListener('mousemove', resize);
-        document.addEventListener('mouseup', stopResize);
-    }
-
-    function resize(e) {
-        if (!isResizing) return;
-        
-        const diff = e.pageX - startX;
-        
-        // Calculate new widths
-        const newPrevWidth = prevColumnWidth + diff;
-        const newNextWidth = nextColumnWidth - diff;
-        
-        // Set minimum width (100px)
-        if (newPrevWidth >= 100 && newNextWidth >= 100) {
-            prevColumn.style.width = newPrevWidth + 'px';
-            nextColumn.style.width = newNextWidth + 'px';
-        }
-    }
-
-    function stopResize() {
-        isResizing = false;
-        document.removeEventListener('mousemove', resize);
-        document.removeEventListener('mouseup', stopResize);
-
-        // Save the new widths to localStorage
-        columns.forEach(column => {
-            localStorage.setItem(`column-width-${column.id}`, column.style.width);
-        });
-    }
-});
-
-const fileManager = document.querySelector('.file-manager');
 let selectedItem = null;
-
+let currentZettelId = null;
 let selectedZettelId = null;
 
+
+
+
+//load zettel content
+function loadZettelContent(zettelId) {
+    fetch(`/zettelkasten/zettel/${zettelId}/content/`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('zettel-title').textContent = data.title;
+            document.getElementById('zettel-created').textContent = `Created: ${data.created}`;
+            document.getElementById('zettel-updated').textContent = `Updated: ${data.updated}`;
+            document.getElementById('zettel-content').innerHTML = data.content;
+            document.getElementById('zettel-author').textContent = data.author;
+
+            document.getElementById('markdown-input').value = data.content_raw;
+            const tagsContainer = document.getElementById('zettel-tags');
+            tagsContainer.innerHTML = '';
+            data.tags.forEach(tag => {
+                const tagSpan = document.createElement('span');
+                tagSpan.className = 'tag';
+                tagSpan.textContent = tag;
+                tagsContainer.appendChild(tagSpan);
+            });
+            
+            document.getElementById('zettel-content').innerHTML = marked.parse(data.content);
+        })
+        .catch(error => console.error('Error loading Zettel content:', error));
+}
+
+
+function getCSRFToken() {
+    let cookieValue = null;
+    const name = 'csrftoken';
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let cookie of cookies) {
+            cookie = cookie.trim();
+            if (cookie.startsWith(name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+const markdownInput = document.getElementById('markdown-input');
+const preview = document.getElementById('zettel-content');
+markdownInput.addEventListener('input', () => {
+    preview.innerHTML = marked.parse(markdownInput.value);
+    //when Input automatically save zettel content
+    if (currentZettelId) {
+        saveZettelContent();
+    }  
+});
+
+document.querySelector('.file-manager').addEventListener('itemSelected', function(e) {
+    if (e.detail.type === 'document') {
+        loadZettelContent(e.detail.id);
+        currentZettelId = e.detail.id;
+    }
+}); 
+
+const fileManager = document.querySelector('.file-manager');
 fileManager.addEventListener('click', function(e) {
     // Find the closest clickable element (folder-header or document)
     const clickable = e.target.closest('.folder-header, .document');
@@ -99,87 +95,7 @@ fileManager.addEventListener('click', function(e) {
     fileManager.dispatchEvent(event);
 });
 
-let currentZettelId = null;
-//load zettel content when item is selected
-document.querySelector('.file-manager').addEventListener('itemSelected', function(e) {
-    if (e.detail.type === 'document') {
-        loadZettelContent(e.detail.id);
-        currentZettelId = e.detail.id;
-    }
-}); 
 
-const markdownInput = document.getElementById('markdown-input');
-const preview = document.getElementById('zettel-content');
-markdownInput.addEventListener('input', () => {
-    preview.innerHTML = marked.parse(markdownInput.value);
-
-    //when Input automatically save zettel content
-    if (currentZettelId) {
-        saveZettelContent();
-    }
-});
-
-document.querySelector('.file-manager').addEventListener('contextmenu', function(e) {
-    e.preventDefault();
-    const clickable = e.target.closest('.folder-content, .document');
-    if (!clickable) return;
-    const type = clickable.dataset.type;
-    const id = clickable.dataset.id;
-
-    customMenu.style.display = 'block';
-    customMenu.style.left = e.clientX + 'px';
-    customMenu.style.top = e.clientY + 'px';
-});
-
-//load zettel content
-function loadZettelContent(zettelId) {
-    fetch(`/zettelkasten/zettel/${zettelId}/content/`)
-        .then(response => response.json())
-        .then(data => {
-            document.getElementById('zettel-title').textContent = data.title;
-            document.getElementById('zettel-created').textContent = `Created: ${data.created}`;
-            document.getElementById('zettel-updated').textContent = `Updated: ${data.updated}`;
-            document.getElementById('zettel-content').innerHTML = data.content;
-            document.getElementById('zettel-author').textContent = data.author;
-
-            document.getElementById('markdown-input').value = data.content_raw;
-            const tagsContainer = document.getElementById('zettel-tags');
-            tagsContainer.innerHTML = '';
-            data.tags.forEach(tag => {
-                const tagSpan = document.createElement('span');
-                tagSpan.className = 'tag';
-                tagSpan.textContent = tag;
-                tagsContainer.appendChild(tagSpan);
-            });
-            
-            document.getElementById('zettel-content').innerHTML = marked.parse(data.content);
-        })
-        .catch(error => console.error('Error loading Zettel content:', error));
-}
-
-function getCookie(name) {
-    const cookieValue = document.cookie
-        .split('; ')
-        .find(row => row.startsWith(name + '='))
-        ?.split('=')[1];
-    return cookieValue;
-}   
-
-function getCSRFToken() {
-    let cookieValue = null;
-    const name = 'csrftoken';
-    if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
-        for (let cookie of cookies) {
-            cookie = cookie.trim();
-            if (cookie.startsWith(name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
-            }
-        }
-    }
-    return cookieValue;
-}
 
 function addEmptyZettel(){
     fetch('/zettelkasten/zettel/create/', {
@@ -193,7 +109,7 @@ function addEmptyZettel(){
     location.reload(); 
 }
 
-function saveZettelContent() {
+async function saveZettelContent() {
     const markdown = document.getElementById('markdown-input').value;
     fetch(`/zettelkasten/zettel/${currentZettelId}/update/`, {
         method: 'POST',
@@ -327,6 +243,7 @@ async function deleteZettel() {
 }
 
 // Add empty zettel function
+/*
 async function addEmptyZettel() {
     try {
         const response = await fetch('/zettelkasten/zettel/create/', {
@@ -360,7 +277,20 @@ async function addEmptyZettel() {
     }
     location.reload();
 }
+*/
 
+//context menu functionality
+document.querySelector('.file-manager').addEventListener('contextmenu', function(e) {
+    e.preventDefault();
+    const clickable = e.target.closest('.folder-content, .document');
+    if (!clickable) return;
+    const type = clickable.dataset.type;
+    const id = clickable.dataset.id;
+
+    customMenu.style.display = 'block';
+    customMenu.style.left = e.clientX + 'px';
+    customMenu.style.top = e.clientY + 'px';
+});
 // Folder collapse functionality
 document.querySelector('.folder-header').addEventListener('click', function(e) {
     // Don't trigger if clicking on the add button

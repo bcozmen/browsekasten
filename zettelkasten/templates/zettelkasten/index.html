@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="zettelkasten-container">
+    <div class="column" id="column1" style="width : 10%">
+        {% include "zettelkasten/file_manager.html" %}
+    </div>
+    <div class="resizer" id="resizer1"></div>
+    <div class="column" id="column2" style="width: 45%;">
+        {% include "zettelkasten/editor.html" %}
+    </div>
+    <div class="resizer" id="resizer2"></div>
+    <div class="column" id="column3" style="width: 45%;">
+        {% include "zettelkasten/viewer.html" %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/zettelkasten.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+
+{% endblock %}
+

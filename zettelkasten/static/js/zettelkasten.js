@@ -2,6 +2,72 @@ let selectedItem = null;
 let currentZettelId = null;
 let selectedZettelId = null;
 
+//resize functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const resizers = document.querySelectorAll('.resizer');
+    const columns = document.querySelectorAll('.column');
+    
+    // Load saved widths from localStorage
+    columns.forEach(column => {
+        const savedWidth = localStorage.getItem(`column-width-${column.id}`);
+        if (savedWidth) {
+            column.style.width = savedWidth;
+        }
+    });
+    
+    let isResizing = false;
+    let currentResizer;
+    let prevColumn;
+    let nextColumn;
+    let prevColumnWidth;
+    let nextColumnWidth;
+    let startX;
+
+    resizers.forEach(resizer => {
+        resizer.addEventListener('mousedown', initResize);
+    });
+
+    function initResize(e) {
+        isResizing = true;
+        currentResizer = e.target;
+        prevColumn = currentResizer.previousElementSibling;
+        nextColumn = currentResizer.nextElementSibling;
+        startX = e.pageX;
+
+        prevColumnWidth = prevColumn.offsetWidth;
+        nextColumnWidth = nextColumn.offsetWidth;
+
+        document.addEventListener('mousemove', resize);
+        document.addEventListener('mouseup', stopResize);
+    }
+
+    function resize(e) {
+        if (!isResizing) return;
+        
+        const diff = e.pageX - startX;
+        
+        // Calculate new widths
+        const newPrevWidth = prevColumnWidth + diff;
+        const newNextWidth = nextColumnWidth - diff;
+        
+        // Set minimum width (100px)
+        if (newPrevWidth >= 100 && newNextWidth >= 100) {
+            prevColumn.style.width = newPrevWidth + 'px';
+            nextColumn.style.width = newNextWidth + 'px';
+        }
+    }
+
+    function stopResize() {
+        isResizing = false;
+        document.removeEventListener('mousemove', resize);
+        document.removeEventListener('mouseup', stopResize);
+
+        // Save the new widths to localStorage
+        columns.forEach(column => {
+            localStorage.setItem(`column-width-${column.id}`, column.style.width);
+        });
+    }
+});
 
 
 
@@ -27,9 +93,17 @@ function loadZettelContent(zettelId) {
             });
             
             document.getElementById('zettel-content').innerHTML = marked.parse(data.content);
+            document.getElementById('zettel-content').innerText = data.content;
         })
         .catch(error => console.error('Error loading Zettel content:', error));
 }
+
+document.querySelector('.file-manager').addEventListener('itemSelected', function(e) {
+    if (e.detail.type === 'document') {
+        loadZettelContent(e.detail.id);
+        currentZettelId = e.detail.id;
+    }
+}); 
 
 
 function getCSRFToken() {
@@ -58,12 +132,7 @@ markdownInput.addEventListener('input', () => {
     }  
 });
 
-document.querySelector('.file-manager').addEventListener('itemSelected', function(e) {
-    if (e.detail.type === 'document') {
-        loadZettelContent(e.detail.id);
-        currentZettelId = e.detail.id;
-    }
-}); 
+
 
 const fileManager = document.querySelector('.file-manager');
 fileManager.addEventListener('click', function(e) {
@@ -110,14 +179,14 @@ function addEmptyZettel(){
 }
 
 async function saveZettelContent() {
-    const markdown = document.getElementById('markdown-input').value;
+    const content = document.getElementById('markdown-input').value;
     fetch(`/zettelkasten/zettel/${currentZettelId}/update/`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             'X-CSRFToken': getCSRFToken()
         },    
-        body: JSON.stringify({ content: markdown })
+        body: JSON.stringify({ content: content })
     })
     
 }
@@ -291,6 +360,7 @@ document.querySelector('.file-manager').addEventListener('contextmenu', function
     customMenu.style.left = e.clientX + 'px';
     customMenu.style.top = e.clientY + 'px';
 });
+
 // Folder collapse functionality
 document.querySelector('.folder-header').addEventListener('click', function(e) {
     // Don't trigger if clicking on the add button

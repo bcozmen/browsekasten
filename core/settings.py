@@ -28,8 +28,8 @@ DEBUG = True
 CSRF_TRUSTED_ORIGINS = [   "https://browsekasten.bcozmen.xyz",]
 
 
-#ALLOWED_HOSTS = ['browsekasten.bcozmen.xyz', 'localhost', '127.0.0.1']
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['browsekasten.bcozmen.xyz', 'localhost', '127.0.0.1']
+#ALLOWED_HOSTS = []
 
 # Application definition
 

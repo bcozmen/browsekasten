@@ -25,11 +25,11 @@ SECRET_KEY = "django-insecure-)+-y=vw_h-a(u*qk8ld+mjvrxdp)#4odern5=5#$1_j%p_ht!b
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-#CSRF_TRUSTED_ORIGINS = [   "https://browsekasten.bcozmen.xyz",]
+CSRF_TRUSTED_ORIGINS = [   "https://browsekasten.bcozmen.xyz",]
 
 
-#ALLOWED_HOSTS = ['browsekasten.bcozmen.xyz', 'localhost', '127.0.0.1']
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['browsekasten.bcozmen.xyz', 'localhost', '127.0.0.1']
+#ALLOWED_HOSTS = []
 
 # Application definition
 

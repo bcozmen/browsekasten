@@ -5,9 +5,6 @@ app_name = 'zettelkasten'
 
 urlpatterns = [
     path('', views.editor, name='editor'),
-    path('blog/', views.blog, name='blog'),
-    path('blog/<slug:slug>', views.blog_post, name='blog_post'),
-    path('network/', views.network, name='network'),
     path('zettel/<int:zettel_id>/content/', views.get_zettel, name='get_zettel'),
     path('zettel/<int:zettel_id>/update/', views.update_zettel_content, name='update_zettel_content'),
     path('zettel/create/', views.create_zettel, name='create_zettel'),

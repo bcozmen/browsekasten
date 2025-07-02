@@ -17,22 +17,7 @@ def editor(request):
     }
     return render(request, 'zettelkasten/zettelkasten_home.html', context)
 
-@login_required
-def blog(request):
-    zettels = Zettel.objects.filter(author=request.user, is_public = True).order_by('-created')
-    context = {
-        'zettels': zettels,
-    }
-    return render(request, 'zettelkasten/blog_home.html', context)
 
-@login_required
-def blog_post(request, slug):
-    zettel = get_object_or_404(Zettel, slug=slug, is_public = True)
-    
-    context = {
-        'blog_post': zettel,
-    }
-    return render(request, 'zettelkasten/blog_home.html', context)
     
 @login_required
 def get_zettel(request, zettel_id):
@@ -157,29 +142,3 @@ def get_privacy_settings(request, zettel_id):
     zettel = get_object_or_404(Zettel, id=zettel_id, author=request.user)
     return JsonResponse({'success': True, 'is_public': zettel.is_public})
 
-@login_required
-def network(request):
-    zettels = Zettel.objects.filter(author=request.user)
-    
-    graph_data = []
-    for zettel in zettels:
-        graph_data.append({
-            'data': {'id': zettel.title, 'label': zettel.title},
-        })
-
-    pattern = r'\[.*?\]\(.*?\)'
-
-    for zettel in zettels:
-        
-        if re.search(pattern, zettel.content):
-            matches = re.findall(pattern, zettel.content)
-            for match in matches:
-                this_id = zettel.title
-                that_id = match.split("(")[1].split(")")[0]
-                if Zettel.objects.filter(title=that_id).exists():
-                    graph_data.append({
-                        'data': {'source': this_id, 'target': that_id},
-                    })
-
-
-    return render(request, 'zettelkasten/network.html', {'graph_data_json': json.dumps(graph_data)})

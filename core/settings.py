@@ -36,6 +36,8 @@ ALLOWED_HOSTS = []
 INSTALLED_APPS = [
     "account.apps.AccountConfig",
     "zettelkasten.apps.ZettelkastenConfig",
+    "graph.apps.GraphConfig",
+    "blog.apps.BlogConfig",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",

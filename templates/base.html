@@ -27,10 +27,10 @@
                     <a href="{% url "zettelkasten:editor" %}">Zettelkasten</a>
                 </li>
                 <li {% if section == "zettelkasten" %}class="selected"{% endif %}>
-                    <a href="{% url "zettelkasten:blog" %}">Blog</a>
+                    <a href="{% url "blog:blog" %}">Blog</a>
                 </li>
                 <li {% if section == "zettelkasten" %}class="selected"{% endif %}>
-                    <a href="{% url "zettelkasten:network" %}">Network</a>
+                    <a href="{% url "graph:network" %}">Network</a>
                 </li>
                 
             </ul>

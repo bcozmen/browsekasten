@@ -47,7 +47,6 @@ markdownEditor.addEventListener('input', () => {
 
 document.querySelector('.file-manager').addEventListener('itemSelected', function(e) {
     if (e.detail.type === 'document') {
-        console.log(e.detail.id);
         loadZettelContent(e.detail.id);
         currentZettelId = e.detail.id;
     }
@@ -104,7 +103,6 @@ function getPrivacySettings(zettel_id) {
     })
     .then(response => response.json())
     .then(data => {
-        console.log(data.is_public);
         return data.is_public;
     });
 }
@@ -116,7 +114,6 @@ document.addEventListener('contextmenu', async function(e) {
         e.preventDefault();
         selectedZettelId = documentElement.dataset.id;
         var is_public = await getPrivacySettings(selectedZettelId);
-        console.log(is_public);
         if (is_public) {
             document.getElementById('privacy_settings').textContent = 'Make Private';
         } else {

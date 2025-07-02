@@ -1,4 +1,5 @@
 {% load blog_tags %}
+
 <style>
     .blog-post {
         margin-bottom: 20px;
@@ -7,7 +8,7 @@
 <!-- Blog posts or main content goes here -->
 {% for zettel in zettels %}
 <div class="blog-post">
-    <h2><a href="{% url 'zettelkasten:blog_post' zettel.slug %}">{{ zettel.slug|deslug|capitalize_first }}</a></h2>
+    <h2><a href="{% url 'blog:blog_post' zettel.slug %}">{{ zettel.slug|deslug|capitalize_first }}</a></h2>
     <p>{{ zettel.created }}</p>
     <p>{{ zettel.content|truncatechars:100|markdown }}</p>
 </div>

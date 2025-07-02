@@ -2,108 +2,8 @@ let selectedItem = null;
 let currentZettelId = null;
 let selectedZettelId = null;
 
-//resize functionality
-document.addEventListener('DOMContentLoaded', function() {
-    const resizers = document.querySelectorAll('.resizer');
-    const columns = document.querySelectorAll('.column');
-    
-    // Load saved widths from localStorage
-    columns.forEach(column => {
-        const savedWidth = localStorage.getItem(`column-width-${column.id}`);
-        if (savedWidth) {
-            column.style.width = savedWidth;
-        }
-    });
-    
-    let isResizing = false;
-    let currentResizer;
-    let prevColumn;
-    let nextColumn;
-    let prevColumnWidth;
-    let nextColumnWidth;
-    let startX;
-
-    resizers.forEach(resizer => {
-        resizer.addEventListener('mousedown', initResize);
-    });
-
-    function initResize(e) {
-        isResizing = true;
-        currentResizer = e.target;
-        prevColumn = currentResizer.previousElementSibling;
-        nextColumn = currentResizer.nextElementSibling;
-        startX = e.pageX;
-
-        prevColumnWidth = prevColumn.offsetWidth;
-        nextColumnWidth = nextColumn.offsetWidth;
-
-        document.addEventListener('mousemove', resize);
-        document.addEventListener('mouseup', stopResize);
-    }
-
-    function resize(e) {
-        if (!isResizing) return;
-        
-        const diff = e.pageX - startX;
-        
-        // Calculate new widths
-        const newPrevWidth = prevColumnWidth + diff;
-        const newNextWidth = nextColumnWidth - diff;
-        
-        // Set minimum width (100px)
-        if (newPrevWidth >= 100 && newNextWidth >= 100) {
-            prevColumn.style.width = newPrevWidth + 'px';
-            nextColumn.style.width = newNextWidth + 'px';
-        }
-    }
-
-    function stopResize() {
-        isResizing = false;
-        document.removeEventListener('mousemove', resize);
-        document.removeEventListener('mouseup', stopResize);
-
-        // Save the new widths to localStorage
-        columns.forEach(column => {
-            localStorage.setItem(`column-width-${column.id}`, column.style.width);
-        });
-    }
-});
-
-
-
-//load zettel content
-function loadZettelContent(zettelId) {
-    fetch(`/zettelkasten/zettel/${zettelId}/content/`)
-        .then(response => response.json())
-        .then(data => {
-            document.getElementById('zettel-title').textContent = data.title;
-            document.getElementById('zettel-created').textContent = `Created: ${data.created}`;
-            document.getElementById('zettel-updated').textContent = `Updated: ${data.updated}`;
-            document.getElementById('zettel-content').innerHTML = data.content;
-            document.getElementById('zettel-author').textContent = data.author;
-
-            document.getElementById('markdown-input').value = data.content_raw;
-            const tagsContainer = document.getElementById('zettel-tags');
-            tagsContainer.innerHTML = '';
-            data.tags.forEach(tag => {
-                const tagSpan = document.createElement('span');
-                tagSpan.className = 'tag';
-                tagSpan.textContent = tag;
-                tagsContainer.appendChild(tagSpan);
-            });
-            
-            document.getElementById('zettel-content').innerHTML = marked.parse(data.content);
-            document.getElementById('zettel-content').innerText = data.content;
-        })
-        .catch(error => console.error('Error loading Zettel content:', error));
-}
-
-document.querySelector('.file-manager').addEventListener('itemSelected', function(e) {
-    if (e.detail.type === 'document') {
-        loadZettelContent(e.detail.id);
-        currentZettelId = e.detail.id;
-    }
-}); 
+let markdownViewer = document.getElementById('markdown-viewer');
+let markdownEditor = document.getElementById('markdown-editor');
 
 
 function getCSRFToken() {
@@ -122,15 +22,40 @@ function getCSRFToken() {
     return cookieValue;
 }
 
-const markdownInput = document.getElementById('markdown-input');
-const preview = document.getElementById('zettel-content');
-markdownInput.addEventListener('input', () => {
-    preview.innerHTML = marked.parse(markdownInput.value);
-    //when Input automatically save zettel content
-    if (currentZettelId) {
-        saveZettelContent();
-    }  
+
+
+
+
+
+
+// Restore collapsed state on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const folderHeader = document.querySelector('.folder-header');
+    const isCollapsed = localStorage.getItem('folderCollapsed') === 'true';
+    if (isCollapsed) {
+        folderHeader.classList.add('collapsed');
+    }
 });
+
+
+markdownEditor.addEventListener('input', () => {
+    markdownViewer.innerHTML = marked.parse(markdownEditor.value);
+    if (currentZettelId) {
+    saveZettelContent(markdownEditor.value);
+    }
+});
+
+document.querySelector('.file-manager').addEventListener('itemSelected', function(e) {
+    if (e.detail.type === 'document') {
+        console.log(e.detail.id);
+        loadZettelContent(e.detail.id);
+        currentZettelId = e.detail.id;
+    }
+}); 
+
+
+
+
 
 
 
@@ -166,37 +91,38 @@ fileManager.addEventListener('click', function(e) {
 
 
 
-function addEmptyZettel(){
-    fetch('/zettelkasten/zettel/create/', {
-        method: 'POST',
+
+
+
+function getPrivacySettings(zettel_id) {
+    return fetch(`/zettelkasten/zettel/${zettel_id}/privacy_settings/`, {
+        method: 'GET',
         headers: {
             'Content-Type': 'application/json',
             'X-CSRFToken': getCSRFToken()
         },
-        body: JSON.stringify({ title: 'New Zettel' })
     })
-    location.reload(); 
+    .then(response => response.json())
+    .then(data => {
+        console.log(data.is_public);
+        return data.is_public;
+    });
 }
 
-async function saveZettelContent() {
-    const content = document.getElementById('markdown-input').value;
-    fetch(`/zettelkasten/zettel/${currentZettelId}/update/`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': getCSRFToken()
-        },    
-        body: JSON.stringify({ content: content })
-    })
-    
-}
 
-document.addEventListener('contextmenu', function(e) {
+document.addEventListener('contextmenu', async function(e) {
     const documentElement = e.target.closest('.document');
     if (documentElement) {
         e.preventDefault();
         selectedZettelId = documentElement.dataset.id;
-        
+        var is_public = await getPrivacySettings(selectedZettelId);
+        console.log(is_public);
+        if (is_public) {
+            document.getElementById('privacy_settings').textContent = 'Make Private';
+        } else {
+            document.getElementById('privacy_settings').textContent = 'Make Public';
+        }
+
         const menu = document.getElementById('customMenu');
         menu.style.display = 'block';
         menu.style.left = e.pageX + 'px';
@@ -211,142 +137,8 @@ document.addEventListener('click', function(e) {
     }
 });
 
-// File operations
-async function renameZettel() {
-    if (!selectedZettelId) return;
-    
-    const documentElement = document.querySelector(`.document[data-id="${selectedZettelId}"]`);
-    const currentTitle = documentElement.querySelector('.document-name').textContent;
-    const currentTitleWithoutMd = currentTitle.replace('.md', '');
-    const newTitle = prompt('Enter new title:', currentTitleWithoutMd);
-    if (!newTitle || newTitle === currentTitleWithoutMd) return;
-    
-    try {
-        const response = await fetch(`/zettelkasten/zettel/${selectedZettelId}/rename/`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCSRFToken()
-            },
-            body: JSON.stringify({ title: newTitle })
-        });
-        
-        if (response.ok) {
-            documentElement.querySelector('.document-name').textContent = newTitle;
-        } else {
-            alert('Failed to rename zettel');
-        }
-    } catch (error) {
-        console.error('Error renaming zettel:', error);
-        alert('Error renaming zettel');
-    }
-    
-    document.getElementById('customMenu').style.display = 'none';
-    location.reload();
-}
 
-async function duplicateZettel() {
-    if (!selectedZettelId) return;
-    
-    try {
-        const response = await fetch(`/zettelkasten/zettel/${selectedZettelId}/duplicate/`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCSRFToken()
-            }
-        });
-        
-        if (response.ok) {
-            const data = await response.json();
-            // Add the new zettel to the UI
-            const folderContent = document.querySelector('.folder-content');
-            const newZettel = document.createElement('div');
-            newZettel.className = 'document';
-            newZettel.dataset.type = 'document';
-            newZettel.dataset.id = data.id;
-            newZettel.innerHTML = `
-                <span class="document-icon">📄</span>
-                <span class="document-name">${data.title}</span>
-            `;
-            folderContent.insertBefore(newZettel, document.getElementById('customMenu'));
-        } else {
-            alert('Failed to duplicate zettel');
-        }
-    } catch (error) {
-        console.error('Error duplicating zettel:', error);
-        alert('Error duplicating zettel');
-    }
-    
-    document.getElementById('customMenu').style.display = 'none';
-    location.reload();
-}
 
-async function deleteZettel() {
-    if (!selectedZettelId) return;
-    
-    if (!confirm('Are you sure you want to delete this zettel?')) return;
-    
-    try {
-        const response = await fetch(`/zettelkasten/zettel/${selectedZettelId}/delete/`, {
-            method: 'DELETE',
-            headers: {
-                'X-CSRFToken': getCSRFToken()
-            }
-        });
-        
-        if (response.ok) {
-            // Remove the zettel from the UI
-            const documentElement = document.querySelector(`.document[data-id="${selectedZettelId}"]`);
-            documentElement.remove();
-        } else {
-            alert('Failed to delete zettel');
-        }
-    } catch (error) {
-        console.error('Error deleting zettel:', error);
-        alert('Error deleting zettel');
-    }
-    
-    document.getElementById('customMenu').style.display = 'none';
-    location.reload();
-}
-
-// Add empty zettel function
-/*
-async function addEmptyZettel() {
-    try {
-        const response = await fetch('/zettelkasten/zettel/create/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCSRFToken()
-            },
-            body: JSON.stringify({ title: 'New Zettel' })
-        });
-        
-        if (response.ok) {
-            const data = await response.json();
-            // Add the new zettel to the UI
-            const folderContent = document.querySelector('.folder-content');
-            const newZettel = document.createElement('div');
-            newZettel.className = 'document';
-            newZettel.dataset.type = 'document';
-            newZettel.dataset.id = data.id;
-            newZettel.innerHTML = `
-                <span class="document-icon">📄</span>
-                <span class="document-name">${data.title}</span>
-            `;
-            folderContent.insertBefore(newZettel, document.getElementById('customMenu'));
-        } else {
-            alert('Failed to create new zettel');
-        }
-    } catch (error) {
-        console.error('Error creating new zettel:', error);
-        alert('Error creating new zettel');
-    }
-    location.reload();
-}
-*/
 
 //context menu functionality
 document.querySelector('.file-manager').addEventListener('contextmenu', function(e) {
@@ -373,11 +165,3 @@ document.querySelector('.folder-header').addEventListener('click', function(e) {
     localStorage.setItem('folderCollapsed', isCollapsed);
 });
 
-// Restore collapsed state on page load
-document.addEventListener('DOMContentLoaded', function() {
-    const folderHeader = document.querySelector('.folder-header');
-    const isCollapsed = localStorage.getItem('folderCollapsed') === 'true';
-    if (isCollapsed) {
-        folderHeader.classList.add('collapsed');
-    }
-});

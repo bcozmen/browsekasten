@@ -1,0 +1,33 @@
+{% load blog_tags %}
+<style>
+    .blog-post-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+    .blog-post-title {
+        font-size: 2rem;
+        font-weight: 700;
+        margin: 0;
+        color: var(--primary-800, #1a472a);
+    }
+    .blog-post-created {
+        font-size: 1rem;
+        font-weight: 400;
+        margin: 0;
+        color: var(--primary-800, #1a472a);
+    }
+    .blog-post-content {
+        font-size: 1rem;
+        font-weight: 400;
+        margin: 0;
+        color: var(--primary-800, #1a472a);
+    }
+</style>
+
+<div class="blog-post-container">
+    <h1 class="blog-post-title">{{ blog_post.slug|deslug|capitalize_first }}</h1>
+    <p class="blog-post-created">{{ blog_post.created }}</p>
+    <p class="blog-post-content">{{ blog_post.content }}</p>
+</div>

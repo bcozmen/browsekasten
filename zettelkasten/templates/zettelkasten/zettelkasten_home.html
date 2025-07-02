@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<style>.zettelkasten-container {
+    display: flex;
+    height: calc(100vh - 100px);
+    width: 100%;
+    max-width: 100%;
+    background-color: var(--bg-primary);
+    padding: var(--spacing-md);
+    gap: 0;
+    margin: 0 auto;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+}
+
+.column {
+    background-color: var(--text-light);
+    padding: var(--spacing-md);
+    overflow: auto;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--ui-border);
+    min-width: 100px;
+}
+
+.resizer {
+    width: 5px;
+    background-color: var(--bg-secondary);
+    cursor: col-resize;
+    transition: background-color var(--transition-fast);
+    border-radius: var(--radius-sm);
+    user-select: none;
+    flex: 0 0 auto; /* Don't grow or shrink */
+}
+
+.resizer:hover {
+    background-color: var(--primary-200);
+}
+
+/* Content styling */
+.column .content {
+    color: var(--text-secondary);
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+
+</style>
+
+
+
+
+<div class="zettelkasten-container">
+    <div class="column" id="column1" style="width : 10%">
+        {% include "zettelkasten/file_manager.html" %}
+    </div>
+    <div class="resizer" id="resizer1"></div>
+    <div class="column" id="column2" style="width: 45%;">
+        {% include "zettelkasten/editor.html" %}
+    </div>
+    <div class="resizer" id="resizer2"></div>
+    <div class="column" id="column3" style="width: 45%;">
+        {% include "zettelkasten/viewer.html" %}
+    </div>
+</div>
+
+{% block extra_js %}
+<!-- Resize functionality -->
+<script>
+        //resize functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const resizers = document.querySelectorAll('.resizer');
+    const columns = document.querySelectorAll('.column');
+    
+    // Load saved widths from localStorage
+    columns.forEach(column => {
+        const savedWidth = localStorage.getItem(`column-width-${column.id}`);
+        if (savedWidth) {
+            column.style.width = savedWidth;
+        }
+    });
+    
+    let isResizing = false;
+    let currentResizer;
+    let prevColumn;
+    let nextColumn;
+    let prevColumnWidth;
+    let nextColumnWidth;
+    let startX;
+
+    resizers.forEach(resizer => {
+        resizer.addEventListener('mousedown', initResize);
+    });
+
+    function initResize(e) {
+        isResizing = true;
+        currentResizer = e.target;
+        prevColumn = currentResizer.previousElementSibling;
+        nextColumn = currentResizer.nextElementSibling;
+        startX = e.pageX;
+
+        prevColumnWidth = prevColumn.offsetWidth;
+        nextColumnWidth = nextColumn.offsetWidth;
+
+        document.addEventListener('mousemove', resize);
+        document.addEventListener('mouseup', stopResize);
+    }
+
+    function resize(e) {
+        if (!isResizing) return;
+        
+        const diff = e.pageX - startX;
+        
+        // Calculate new widths
+        const newPrevWidth = prevColumnWidth + diff;
+        const newNextWidth = nextColumnWidth - diff;
+        
+        // Set minimum width (100px)
+        if (newPrevWidth >= 100 && newNextWidth >= 100) {
+            prevColumn.style.width = newPrevWidth + 'px';
+            nextColumn.style.width = newNextWidth + 'px';
+        }
+    }
+
+    function stopResize() {
+        isResizing = false;
+        document.removeEventListener('mousemove', resize);
+        document.removeEventListener('mouseup', stopResize);
+
+        // Save the new widths to localStorage
+        columns.forEach(column => {
+            localStorage.setItem(`column-width-${column.id}`, column.style.width);
+        });
+    }
+});
+
+</script>
+
+<script src="{% static 'js/zettelkasten.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/turndown/dist/turndown.min.js"></script>
+{% endblock %}
+
+
+{% endblock %}
+

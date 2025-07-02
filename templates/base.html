@@ -13,8 +13,6 @@
     <link href="{% static "css/buttons.css" %}?v=1" rel="stylesheet">
     <link href="{% static "css/hero.css" %}?v=1" rel="stylesheet">
     <link href="{% static "css/form.css" %}?v=1" rel="stylesheet">
-    <link href="{% static "css/file_manager.css" %}?v=1" rel="stylesheet">
-    <link href="{% static "css/zettelkasten.css" %}?v=1" rel="stylesheet">
     {% block extra_css %}{% endblock %}
 </head>
 
@@ -25,12 +23,16 @@
             <a href="/">BrowseKasten</a>    
             {% if request.user.is_authenticated %}
             <ul>
-                <li {% if section == "dashboard" %}class="selected"{% endif %}>
-                    <a href="{% url "dashboard" %}">My Dashboard</a>
+                <li {% if section == "zettelkasten" %}class="selected"{% endif %}>
+                    <a href="{% url "zettelkasten:editor" %}">Zettelkasten</a>
                 </li>
                 <li {% if section == "zettelkasten" %}class="selected"{% endif %}>
-                    <a href="{% url "zettelkasten:editor" %}">My Zettelkasten</a>
+                    <a href="{% url "zettelkasten:blog" %}">Blog</a>
                 </li>
+                <li {% if section == "zettelkasten" %}class="selected"{% endif %}>
+                    <a href="{% url "zettelkasten:network" %}">Network</a>
+                </li>
+                
             </ul>
             {% endif %}
             <div>

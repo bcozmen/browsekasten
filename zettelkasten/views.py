@@ -1,42 +1,72 @@
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
-from django.utils.safestring import mark_safe
-import markdown
 from .models import Zettel
-from taggit.models import Tag
-from .forms import ZettelForm
 from django.views.decorators.http import require_POST
 import json
-from django.views.decorators.csrf import csrf_exempt
-
+from django.utils.text import slugify   
+from django.utils.safestring import mark_safe
+import markdown
+import re
+#mark_safe(markdown.markdown(content))
 @login_required
 def editor(request):
     zettels = Zettel.objects.filter(author=request.user).order_by('-created')
     context = {
         'zettels': zettels,
     }
-    return render(request, 'zettelkasten/index.html', context)
+    return render(request, 'zettelkasten/zettelkasten_home.html', context)
 
+@login_required
+def blog(request):
+    zettels = Zettel.objects.filter(author=request.user, is_public = True).order_by('-created')
+    context = {
+        'zettels': zettels,
+    }
+    return render(request, 'zettelkasten/blog_home.html', context)
 
+@login_required
+def blog_post(request, slug):
+    zettel = get_object_or_404(Zettel, slug=slug, is_public = True)
+    
+    context = {
+        'blog_post': zettel,
+    }
+    return render(request, 'zettelkasten/blog_home.html', context)
     
 @login_required
-def get_zettel_content(request, zettel_id):
+def get_zettel(request, zettel_id):
     zettel = get_object_or_404(Zettel, id=zettel_id, author=request.user)
-    content = "<br/>\n\n---\n<br/>\n" + zettel.content
     return JsonResponse({
-        'title': zettel.title,
+        'title': zettel.title.replace(".md", "").replace("-", " ").replace("_", " "),
         'author': zettel.author.username,
-        'content': mark_safe(markdown.markdown(content)),
-        'content_raw': zettel.content,
+        'contentRaw': zettel.content,
+        'contentRendered': mark_safe(markdown.markdown(zettel.content)),
         'created': zettel.created.strftime('%Y-%m-%d %H:%M:%S'),
         'updated': zettel.updated.strftime('%Y-%m-%d %H:%M:%S'),
-        'tags': list(zettel.tags.names())
     })
 
 @login_required
 @require_POST
-def update_zettel(request, zettel_id):
+def create_zettel(request):
+    try:
+        title = 0
+        while Zettel.objects.filter(title="new-zettel-" + str(title) , author=request.user).exists():
+            title += 1
+        title = "new-zettel-" + str(title)
+
+        slug = slugify(title).lower()
+
+        zettel = Zettel(title=title , author=request.user, is_public = False, content = "", slug = slug)
+        zettel.save()
+
+        return JsonResponse({'success': True, 'zettel_id': zettel.id})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+@login_required
+@require_POST
+def update_zettel_content(request, zettel_id):
     try:
         data = json.loads(request.body)
         content = data.get('content', '').strip()
@@ -49,21 +79,9 @@ def update_zettel(request, zettel_id):
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=400)
 
-@login_required
-@require_POST
-def create_zettel(request):
-    try:
-        title = 0
-        while Zettel.objects.filter(title="new-zettel-" + str(title) + ".md", author=request.user).exists():
-            title += 1
-        print(title)
-        title = "new-zettel-" + str(title)
-        zettel = Zettel(title=title + ".md", author=request.user, is_public = False, content = "", slug = title, tags = "")
-        zettel.save()
 
-        return JsonResponse({'success': True, 'zettel_id': zettel.id})
-    except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+
 
 @login_required
 @require_POST
@@ -71,9 +89,19 @@ def rename_zettel(request, zettel_id):
     try:
         data = json.loads(request.body)
         title = data.get('title', '').strip()
+
+        if "." in title:
+            title = title.split(".")[0]
+        title = title.lower()
+
+        #check if title is already taken, if so, add a number to the end
+        if Zettel.objects.filter(title=title, author=request.user).exists():
+            
+            return JsonResponse({'success': False, 'error': "File name exists"}, status=400)
+
         zettel = get_object_or_404(Zettel, id=zettel_id, author=request.user)
-        zettel.slug = "-".join(title.split(" ")[0])
-        zettel.title = title + ".md"
+        zettel.slug = slugify(title)
+        zettel.title = title
         zettel.save()
         return JsonResponse({'success': True})
     except Exception as e:
@@ -85,7 +113,13 @@ def rename_zettel(request, zettel_id):
 def duplicate_zettel(request, zettel_id):
     try:
         zettel = get_object_or_404(Zettel, id=zettel_id, author=request.user)
-        new_zettel = Zettel(title=zettel.title + " (copy)", author=request.user, is_public = zettel.is_public, content = zettel.content, slug = zettel.slug + "-copy", tags = zettel.tags)
+        title_base = zettel.title + "-copy"
+        title = 0
+        while Zettel.objects.filter(title=title_base + "-" + str(title) , author=request.user).exists():
+            title += 1
+        title = title_base + "-" + str(title) 
+        slug = slugify(title).lower()
+        new_zettel = Zettel(title=title, author=request.user, is_public = zettel.is_public, content = zettel.content, slug = slugify(title).lower())
         new_zettel.save()
         return JsonResponse({'success': True, 'zettel_id': new_zettel.id})
     except Exception as e:
@@ -101,3 +135,51 @@ def delete_zettel(request, zettel_id):
         return JsonResponse({'success': True})
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+@login_required
+@require_POST
+def make_private(request, zettel_id):
+    zettel = get_object_or_404(Zettel, id=zettel_id, author=request.user)
+    zettel.is_public = False
+    zettel.save()
+    return JsonResponse({'success': True})
+
+@login_required
+@require_POST
+def make_public(request, zettel_id):
+    zettel = get_object_or_404(Zettel, id=zettel_id, author=request.user)
+    zettel.is_public = True
+    zettel.save()
+    return JsonResponse({'success': True})
+
+@login_required
+def get_privacy_settings(request, zettel_id):
+    zettel = get_object_or_404(Zettel, id=zettel_id, author=request.user)
+    return JsonResponse({'success': True, 'is_public': zettel.is_public})
+
+@login_required
+def network(request):
+    zettels = Zettel.objects.filter(author=request.user)
+    
+    graph_data = []
+    for zettel in zettels:
+        graph_data.append({
+            'data': {'id': zettel.title, 'label': zettel.title},
+        })
+
+    pattern = r'\[.*?\]\(.*?\)'
+
+    for zettel in zettels:
+        
+        if re.search(pattern, zettel.content):
+            matches = re.findall(pattern, zettel.content)
+            for match in matches:
+                this_id = zettel.title
+                that_id = match.split("(")[1].split(")")[0]
+                if Zettel.objects.filter(title=that_id).exists():
+                    graph_data.append({
+                        'data': {'source': this_id, 'target': that_id},
+                    })
+
+
+    return render(request, 'zettelkasten/network.html', {'graph_data_json': json.dumps(graph_data)})

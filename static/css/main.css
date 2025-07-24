@@ -7,9 +7,13 @@
 @import url('02-components/_buttons.css');
 @import url('02-components/_forms.css');
 
-@import url('03-pages/home.css');
-@import url('03-pages/blog.css'); /* IGNORE - this is the old home page styles, kept for reference */
-@import url('03-pages/_zettelkasten.css');
-@import url('03-pages/_codemirror.css');
 
+@import url('03-pages/_file_manager.css');
+@import url('03-pages/_markdown-shared.css');
+@import url('03-pages/_zettelkasten.css');
+@import url('03-pages/blog.css');
+@import url('03-pages/editor/_codemirror.css');
+@import url('03-pages/editor/_editor.css');
+@import url('03-pages/editor/_markdown-preview.css');
 @import url('04-utilities/_responsive.css');
+

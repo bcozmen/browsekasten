@@ -1,0 +1,45 @@
+
+
+nav a, nav span, footer a, footer span,nav button{
+    color: var(--navbar-text);
+    text-decoration: none;
+    background : none;
+    
+    font-size: var(--font-size-xs);
+    text-align: center;
+}
+
+nav a:hover{
+    color: var(--navbar-text);
+}
+
+
+/* Navbar Layout */
+.navbar-left,  .navbar-right {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 1;
+    min-width: 250px; /* Ensures left and right sections have a minimum width */
+}
+
+.navbar-mid {
+    display: flex;
+    align-items: center;
+    flex-shrink: 1;
+    flex-basis: var(--container-max-width);
+}
+
+
+
+.navbar-left, .navbar-right {
+    flex-grow: 1;
+}
+
+.navbar-mid ul, .navbar-right ul{
+    padding: 0 0 0 var(--spacing-xxl);
+    display: flex;
+    list-style: none;
+    border : none ;
+}
+

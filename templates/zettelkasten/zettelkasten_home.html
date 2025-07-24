@@ -3,12 +3,6 @@
 
 {% block content %}
 
-<script src="{% static 'js/dom.js' %}"></script>
-<script src="{% static 'js/utils.js' %}"></script>
-<script src="{% static 'js/api.js' %}"></script>
-
-
-
 <div class="zettelkasten-container">
     <div class="file-manager-container" >
         {% include "zettelkasten/file_manager/_file_manager_bar.html" %}
@@ -20,15 +14,34 @@
     </div>
 </div>
 
-{% block extra_js %}
-<!-- Resize functionality -->
-
-
-
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/turndown/dist/turndown.min.js"></script>
 {% endblock %}
 
+{% block extra_js %}
+<!-- Core Dependencies -->
+<script src="{% static 'js/02-core/dom.js' %}"></script>
+<script src="{% static 'js/02-core/utils.js' %}"></script>
+<script src="{% static 'js/02-core/api.js' %}"></script>
 
+<!-- IDE System Components -->
+<script src="{% static 'js/03-components/ide/markdown-live-preview.js' %}"></script>
+<script src="{% static 'js/03-components/ide/markdown-formatter.js' %}"></script>
+<script src="{% static 'js/03-components/ide/editor-search.js' %}"></script>
+<script src="{% static 'js/03-components/ide/FileManager.js' %}"></script>
+<script src="{% static 'js/03-components/ide/TabManager.js' %}"></script>
+<script src="{% static 'js/03-components/ide/PanelResizer.js' %}"></script>
+<script src="{% static 'js/03-components/ide/EditorFactory.js' %}"></script>
+<script src="{% static 'js/03-components/ide/IDEController.js' %}"></script>
+
+<!-- External Dependencies -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/turndown/dist/turndown.min.js"></script>
+
+<!-- Initialize IDE -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize the IDE system
+    window.ide = new IDEController('.zettelkasten-container');
+});
+</script>
 {% endblock %}
 

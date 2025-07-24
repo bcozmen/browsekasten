@@ -1,0 +1,58 @@
+.zettelkasten-container {
+    display: flex;
+    width: 100%;
+    height: calc(100vh - 100px);
+
+    overflow: hidden;
+
+}
+
+.resizer {
+    width: 2px;
+    background-color: var(--border-medium);
+    cursor: ew-resize;
+}
+
+.file-manager-container,
+.editor-container {
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
+}
+
+.file-manager-container::-webkit-scrollbar {
+    width: 6px;
+    background-color: var(--color-secondary-300);
+}
+
+.file-manager-container::-webkit-scrollbar-thumb {
+    background-color: var(--color-primary-300);
+    border-radius: 4px;
+}
+
+.file-manager-container {
+    min-width: 5px;
+    width: 250px;
+
+}
+
+.editor-container {
+    flex: 2;
+    min-width: 600px;
+    overflow: hidden;
+
+    height: 100%;
+    width : 100%;
+}
+
+
+
+.zettelkasten-editor-bar {
+    width : 100%;
+    height: var(--spacing-8);
+    background-color: var(--border-hard-inv);
+    display: flex;
+}
+
+
+

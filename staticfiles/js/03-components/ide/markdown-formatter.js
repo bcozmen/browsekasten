@@ -48,70 +48,161 @@ class MarkdownFormatter {
         const selection = this.editor.getSelection();
         const cursor = this.editor.getCursor();
         let replacement = '';
+        let cursorOffset = 0; // Position to place cursor relative to start of replacement
 
-        switch(type) {
-            case 'bold':
-                replacement = selection ? `**${selection}**` : '**bold text**';
-                break;
-            case 'italic':
-                replacement = selection ? `*${selection}*` : '*italic text*';
-                break;
-            case 'strikethrough':
-                replacement = selection ? `~~${selection}~~` : '~~strikethrough text~~';
-                break;
-            case 'code':
-                replacement = selection ? `\`${selection}\`` : '`code`';
-                break;
-            case 'codeblock':
-                replacement = selection ? `\`\`\`\n${selection}\n\`\`\`` : '```\ncode block\n```';
-                break;
-            case 'link':
-                replacement = selection ? `[${selection}](url)` : '[link text](url)';
-                break;
-            case 'header1':
-                replacement = selection ? `# ${selection}` : '# Header 1';
-                break;
-            case 'header2':
-                replacement = selection ? `## ${selection}` : '## Header 2';
-                break;
-            case 'header3':
-                replacement = selection ? `### ${selection}` : '### Header 3';
-                break;
-            case 'header4':
-                replacement = selection ? `#### ${selection}` : '#### Header 4';
-                break;
-            case 'header5':
-                replacement = selection ? `##### ${selection}` : '##### Header 5';
-                break;
-            case 'header6':
-                replacement = selection ? `###### ${selection}` : '###### Header 6';
-                break;
-            case 'list':
-                replacement = selection ? `- ${selection}` : '- List item';
-                break;
-            case 'orderedlist':
-                replacement = selection ? `1. ${selection}` : '1. List item';
-                break;
-            case 'quote':
-                replacement = selection ? `> ${selection}` : '> Quote';
-                break;
-            case 'table':
-                replacement = selection ? 
-                    `| Header 1 | Header 2 |\n|----------|----------|\n| ${selection} | Cell 2 |` :
-                    '| Header 1 | Header 2 |\n|----------|----------|\n| Cell 1   | Cell 2   |';
-                break;
-            case 'hr':
-                replacement = '\n---\n';
-                break;
-            case 'image':
-                replacement = selection ? `![${selection}](image-url)` : '![alt text](image-url)';
-                break;
-            default:
-                console.warn(`Unknown formatting type: ${type}`);
-                return;
+        if (selection) {
+            // Text is selected - wrap it with formatting
+            switch(type) {
+                case 'bold':
+                    replacement = `**${selection}**`;
+                    break;
+                case 'italic':
+                    replacement = `*${selection}*`;
+                    break;
+                case 'strikethrough':
+                    replacement = `~~${selection}~~`;
+                    break;
+                case 'code':
+                    replacement = `\`${selection}\``;
+                    break;
+                case 'codeblock':
+                    replacement = `\`\`\`\n${selection}\n\`\`\``;
+                    break;
+                case 'link':
+                    replacement = `[${selection}](url)`;
+                    break;
+                case 'header1':
+                    replacement = `# ${selection}`;
+                    break;
+                case 'header2':
+                    replacement = `## ${selection}`;
+                    break;
+                case 'header3':
+                    replacement = `### ${selection}`;
+                    break;
+                case 'header4':
+                    replacement = `#### ${selection}`;
+                    break;
+                case 'header5':
+                    replacement = `##### ${selection}`;
+                    break;
+                case 'header6':
+                    replacement = `###### ${selection}`;
+                    break;
+                case 'list':
+                    replacement = `- ${selection}`;
+                    break;
+                case 'orderedlist':
+                    replacement = `1. ${selection}`;
+                    break;
+                case 'quote':
+                    replacement = `> ${selection}`;
+                    break;
+                case 'table':
+                    replacement = `| Header 1 | Header 2 |\n|----------|----------|\n| ${selection} | Cell 2 |`;
+                    break;
+                case 'hr':
+                    replacement = '\n---\n';
+                    break;
+                case 'image':
+                    replacement = `![${selection}](image-url)`;
+                    break;
+                default:
+                    console.warn(`Unknown formatting type: ${type}`);
+                    return;
+            }
+        } else {
+            // No selection - insert formatting with cursor positioned inside
+            switch(type) {
+                case 'bold':
+                    replacement = '****';
+                    cursorOffset = 2;
+                    break;
+                case 'italic':
+                    replacement = '**';
+                    cursorOffset = 1;
+                    break;
+                case 'strikethrough':
+                    replacement = '~~~~';
+                    cursorOffset = 2;
+                    break;
+                case 'code':
+                    replacement = '``';
+                    cursorOffset = 1;
+                    break;
+                case 'codeblock':
+                    replacement = '```\n\n```';
+                    cursorOffset = 4;
+                    break;
+                case 'link':
+                    replacement = '[](url)';
+                    cursorOffset = 1;
+                    break;
+                case 'header1':
+                    replacement = '# ';
+                    cursorOffset = 2;
+                    break;
+                case 'header2':
+                    replacement = '## ';
+                    cursorOffset = 3;
+                    break;
+                case 'header3':
+                    replacement = '### ';
+                    cursorOffset = 4;
+                    break;
+                case 'header4':
+                    replacement = '#### ';
+                    cursorOffset = 5;
+                    break;
+                case 'header5':
+                    replacement = '##### ';
+                    cursorOffset = 6;
+                    break;
+                case 'header6':
+                    replacement = '###### ';
+                    cursorOffset = 7;
+                    break;
+                case 'list':
+                    replacement = '- ';
+                    cursorOffset = 2;
+                    break;
+                case 'orderedlist':
+                    replacement = '1. ';
+                    cursorOffset = 3;
+                    break;
+                case 'quote':
+                    replacement = '> ';
+                    cursorOffset = 2;
+                    break;
+                case 'table':
+                    replacement = '| Header 1 | Header 2 |\n|----------|----------|\n|  |  |';
+                    cursorOffset = 54; // Position in first cell
+                    break;
+                case 'hr':
+                    replacement = '\n---\n';
+                    cursorOffset = 5;
+                    break;
+                case 'image':
+                    replacement = '![](image-url)';
+                    cursorOffset = 2;
+                    break;
+                default:
+                    console.warn(`Unknown formatting type: ${type}`);
+                    return;
+            }
         }
 
         this.editor.replaceSelection(replacement);
+        
+        // If no selection was made, position cursor appropriately
+        if (!selection && cursorOffset > 0) {
+            const newCursor = {
+                line: cursor.line,
+                ch: cursor.ch + cursorOffset
+            };
+            this.editor.setCursor(newCursor);
+        }
+        
         this.editor.focus();
     }
 

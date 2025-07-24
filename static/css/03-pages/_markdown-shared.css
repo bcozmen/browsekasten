@@ -1,0 +1,551 @@
+/**
+ * SHARED MARKDOWN STYLING
+ * 
+ * This CSS file provides consistent markdown styling that works for:
+ * 1. Live preview widgets in the editor (via .markdown class)
+ * 2. Static blog post rendering (via .blog-content class)
+ * 3. Any markdown content display (via .markdown-content class)
+ * 
+ * DESIGN PRINCIPLES:
+ * - Uses CSS custom properties for theming
+ * - Responsive typography with fluid scaling
+ * - Accessible color contrasts
+ * - Consistent spacing rhythm
+ * - Clean, readable typography
+ */
+
+/* ==========================================================================
+   BASE MARKDOWN CONTENT CONTAINER
+   ========================================================================== */
+
+/**
+ * MAIN CONTAINER CLASSES
+ * Apply one of these classes to any container that holds markdown content
+ */
+.markdown,
+.markdown-content,
+.blog-content {
+    /* TYPOGRAPHY FOUNDATION */
+    font-family: var(--font-family-body, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
+    font-size: var(--font-size-base, 16px);
+    line-height: var(--line-height-relaxed, 1.6);
+    color: var(--text-primary, #1f2937);
+    
+    /* SPACING AND LAYOUT */
+    max-width: 100%;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    
+    /* SMOOTH TRANSITIONS */
+    transition: all 0.2s ease;
+}
+
+/* ==========================================================================
+   HEADINGS - Clean hierarchy with visual distinction
+   ========================================================================== */
+
+/**
+ * MARKDOWN HEADERS
+ * Progressive sizing with consistent spacing and visual hierarchy
+ */
+.markdown h1, .markdown-content h1, .blog-content h1,
+.markdown h2, .markdown-content h2, .blog-content h2,
+.markdown h3, .markdown-content h3, .blog-content h3,
+.markdown h4, .markdown-content h4, .blog-content h4,
+.markdown h5, .markdown-content h5, .blog-content h5,
+.markdown h6, .markdown-content h6, .blog-content h6 {
+    /* TYPOGRAPHY */
+    font-family: var(--font-family-heading, inherit);
+    font-weight: var(--font-weight-bold, 700);
+    line-height: var(--line-height-tight, 1.25);
+    color: var(--text-heading, var(--text-primary, #111827));
+    
+    /* SPACING */
+    margin: 1.5em 0 0.5em 0;
+    padding: 0;
+    
+    /* VISUAL ENHANCEMENTS */
+    letter-spacing: -0.025em;
+    text-rendering: optimizeLegibility;
+}
+
+/* SPECIFIC HEADER SIZES */
+.markdown h1, .markdown-content h1, .blog-content h1 {
+    font-size: clamp(1.875rem, 4vw, 2.25rem); /* 30px - 36px */
+    margin-top: 0; /* No top margin for first heading */
+    border-bottom: 2px solid var(--border-light, #e5e7eb);
+    padding-bottom: 0.5rem;
+}
+
+.markdown h2, .markdown-content h2, .blog-content h2 {
+    font-size: clamp(1.5rem, 3vw, 1.875rem); /* 24px - 30px */
+    border-bottom: 1px solid var(--border-light, #e5e7eb);
+    padding-bottom: 0.25rem;
+}
+
+.markdown h3, .markdown-content h3, .blog-content h3 {
+    font-size: clamp(1.25rem, 2.5vw, 1.5rem); /* 20px - 24px */
+}
+
+.markdown h4, .markdown-content h4, .blog-content h4 {
+    font-size: clamp(1.125rem, 2vw, 1.25rem); /* 18px - 20px */
+}
+
+.markdown h5, .markdown-content h5, .blog-content h5 {
+    font-size: 1.125rem; /* 18px */
+}
+
+.markdown h6, .markdown-content h6, .blog-content h6 {
+    font-size: 1rem; /* 16px */
+    font-weight: var(--font-weight-semibold, 600);
+    color: var(--text-secondary, #6b7280);
+}
+
+/* ==========================================================================
+   TEXT FORMATTING - Bold, italic, strikethrough, etc.
+   ========================================================================== */
+
+/**
+ * EMPHASIS AND STRONG TEXT
+ */
+.markdown strong, .markdown-content strong, .blog-content strong,
+.markdown b, .markdown-content b, .blog-content b {
+    font-weight: var(--font-weight-bold, 700);
+    color: var(--text-emphasis, inherit);
+}
+
+.markdown em, .markdown-content em, .blog-content em,
+.markdown i, .markdown-content i, .blog-content i {
+    font-style: italic;
+    color: var(--text-emphasis, inherit);
+}
+
+/**
+ * STRIKETHROUGH TEXT
+ */
+.markdown del, .markdown-content del, .blog-content del {
+    text-decoration: line-through;
+    color: var(--text-muted, #9ca3af);
+    opacity: 0.8;
+}
+
+/**
+ * UNDERLINED TEXT
+ */
+.markdown u, .markdown-content u, .blog-content u {
+    text-decoration: underline;
+    text-decoration-color: var(--color-primary-400, #60a5fa);
+}
+
+/* ==========================================================================
+   CODE ELEMENTS - Inline code and code blocks
+   ========================================================================== */
+
+/**
+ * INLINE CODE
+ * Styled for readability and distinction from regular text
+ */
+.markdown code, .markdown-content code, .blog-content code {
+    /* TYPOGRAPHY */
+    font-family: var(--font-family-mono, 'Fira Code', 'Monaco', 'Consolas', monospace);
+    font-size: 0.875em;
+    
+    /* VISUAL STYLING */
+    background: var(--bg-code-inline, #f3f4f6);
+    color: var(--text-code, #e11d48);
+    border: 1px solid var(--border-code, #e5e7eb);
+    border-radius: 4px;
+    
+    /* SPACING */
+    padding: 0.125em 0.375em;
+    margin: 0 0.125em;
+    
+    /* BEHAVIOR */
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+/**
+ * CODE BLOCKS
+ * Multi-line code with syntax highlighting support
+ */
+.markdown pre, .markdown-content pre, .blog-content pre {
+    /* CONTAINER STYLING */
+    background: var(--bg-code-block, #1f2937);
+    color: var(--text-code-block, #f9fafb);
+    border: 1px solid var(--border-code-block, #374151);
+    border-radius: 8px;
+    
+    /* SPACING */
+    padding: 1rem;
+    margin: 1em 0;
+    
+    /* TYPOGRAPHY */
+    font-family: var(--font-family-mono, 'Fira Code', 'Monaco', 'Consolas', monospace);
+    font-size: 0.875rem;
+    line-height: 1.5;
+    
+    /* BEHAVIOR */
+    overflow-x: auto;
+    white-space: pre;
+    word-wrap: normal;
+    
+    /* SCROLLBAR STYLING */
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-primary-400, #60a5fa) transparent;
+}
+
+.markdown pre::-webkit-scrollbar, 
+.markdown-content pre::-webkit-scrollbar, 
+.blog-content pre::-webkit-scrollbar {
+    height: 8px;
+}
+
+.markdown pre::-webkit-scrollbar-track,
+.markdown-content pre::-webkit-scrollbar-track,
+.blog-content pre::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.markdown pre::-webkit-scrollbar-thumb,
+.markdown-content pre::-webkit-scrollbar-thumb,
+.blog-content pre::-webkit-scrollbar-thumb {
+    background: var(--color-primary-400, #60a5fa);
+    border-radius: 4px;
+}
+
+/**
+ * CODE INSIDE PRE BLOCKS
+ * Reset inline code styling when inside code blocks
+ */
+.markdown pre code, .markdown-content pre code, .blog-content pre code {
+    background: transparent;
+    border: none;
+    padding: 0;
+    margin: 0;
+    color: inherit;
+    font-size: inherit;
+}
+
+/* ==========================================================================
+   LINKS - Accessible and visually appealing
+   ========================================================================== */
+
+/**
+ * LINK STYLING
+ * Clear visual distinction with hover effects
+ */
+.markdown a, .markdown-content a, .blog-content a {
+    /* COLORS */
+    color: var(--color-primary-600, #2563eb);
+    text-decoration: underline;
+    text-decoration-color: var(--color-primary-300, #93c5fd);
+    text-underline-offset: 3px;
+    
+    /* TRANSITIONS */
+    transition: all 0.2s ease;
+    
+    /* CURSOR */
+    cursor: pointer;
+}
+
+.markdown a:hover, .markdown-content a:hover, .blog-content a:hover,
+.markdown a:focus, .markdown-content a:focus, .blog-content a:focus {
+    color: var(--color-primary-700, #1d4ed8);
+    text-decoration-color: var(--color-primary-500, #3b82f6);
+    text-decoration-thickness: 2px;
+}
+
+.markdown a:focus, .markdown-content a:focus, .blog-content a:focus {
+    outline: 2px solid var(--color-primary-400, #60a5fa);
+    outline-offset: 2px;
+    border-radius: 2px;
+}
+
+/* ==========================================================================
+   LISTS - Ordered and unordered with proper spacing
+   ========================================================================== */
+
+/**
+ * LIST CONTAINERS
+ */
+.markdown ul, .markdown-content ul, .blog-content ul,
+.markdown ol, .markdown-content ol, .blog-content ol {
+    /* SPACING */
+    margin: 1em 0;
+    padding-left: 2em;
+    
+    /* TYPOGRAPHY */
+    line-height: var(--line-height-relaxed, 1.6);
+}
+
+/**
+ * NESTED LISTS
+ */
+.markdown ul ul, .markdown-content ul ul, .blog-content ul ul,
+.markdown ol ol, .markdown-content ol ol, .blog-content ol ol,
+.markdown ul ol, .markdown-content ul ol, .blog-content ul ol,
+.markdown ol ul, .markdown-content ol ul, .blog-content ol ul {
+    margin: 0.5em 0;
+}
+
+/**
+ * LIST ITEMS
+ */
+.markdown li, .markdown-content li, .blog-content li {
+    margin: 0.25em 0;
+    line-height: inherit;
+}
+
+/**
+ * UNORDERED LIST MARKERS
+ */
+.markdown ul, .markdown-content ul, .blog-content ul {
+    list-style-type: disc;
+}
+
+.markdown ul ul, .markdown-content ul ul, .blog-content ul ul {
+    list-style-type: circle;
+}
+
+.markdown ul ul ul, .markdown-content ul ul ul, .blog-content ul ul ul {
+    list-style-type: square;
+}
+
+/**
+ * ORDERED LIST MARKERS
+ */
+.markdown ol, .markdown-content ol, .blog-content ol {
+    list-style-type: decimal;
+}
+
+.markdown ol ol, .markdown-content ol ol, .blog-content ol ol {
+    list-style-type: lower-alpha;
+}
+
+.markdown ol ol ol, .markdown-content ol ol ol, .blog-content ol ol ol {
+    list-style-type: lower-roman;
+}
+
+/* ==========================================================================
+   BLOCKQUOTES - Elegant quotation styling
+   ========================================================================== */
+
+/**
+ * BLOCKQUOTE STYLING
+ * Visual distinction with left border and background
+ */
+.markdown blockquote, .markdown-content blockquote, .blog-content blockquote {
+    /* VISUAL STYLING */
+    background: var(--bg-blockquote, #f8fafc);
+    border-left: 4px solid var(--color-primary-400, #60a5fa);
+    color: var(--text-blockquote, #475569);
+    
+    /* SPACING */
+    margin: 1.5em 0;
+    padding: 1em 1.5em;
+    
+    /* TYPOGRAPHY */
+    font-style: italic;
+    line-height: var(--line-height-relaxed, 1.6);
+    
+    /* LAYOUT */
+    border-radius: 0 8px 8px 0;
+}
+
+/**
+ * BLOCKQUOTE PARAGRAPHS
+ */
+.markdown blockquote p, .markdown-content blockquote p, .blog-content blockquote p {
+    margin: 0.5em 0;
+}
+
+.markdown blockquote p:first-child, .markdown-content blockquote p:first-child, .blog-content blockquote p:first-child {
+    margin-top: 0;
+}
+
+.markdown blockquote p:last-child, .markdown-content blockquote p:last-child, .blog-content blockquote p:last-child {
+    margin-bottom: 0;
+}
+
+/* ==========================================================================
+   TABLES - Clean, responsive table styling
+   ========================================================================== */
+
+/**
+ * TABLE CONTAINER
+ * Responsive wrapper for horizontal scrolling
+ */
+.markdown table, .markdown-content table, .blog-content table {
+    /* LAYOUT */
+    width: 100%;
+    border-collapse: collapse;
+    border-spacing: 0;
+    
+    /* VISUAL */
+    border: 1px solid var(--border-table, #e5e7eb);
+    border-radius: 8px;
+    overflow: hidden;
+    
+    /* SPACING */
+    margin: 1.5em 0;
+    
+    /* TYPOGRAPHY */
+    font-size: 0.9em;
+    line-height: 1.5;
+}
+
+/**
+ * TABLE HEADERS
+ */
+.markdown th, .markdown-content th, .blog-content th {
+    /* VISUAL */
+    background: var(--bg-table-header, #f8fafc);
+    color: var(--text-table-header, #374151);
+    border-bottom: 2px solid var(--border-table-header, #d1d5db);
+    
+    /* SPACING */
+    padding: 0.75em 1em;
+    
+    /* TYPOGRAPHY */
+    font-weight: var(--font-weight-semibold, 600);
+    text-align: left;
+    
+    /* BEHAVIOR */
+    white-space: nowrap;
+}
+
+/**
+ * TABLE CELLS
+ */
+.markdown td, .markdown-content td, .blog-content td {
+    /* SPACING */
+    padding: 0.75em 1em;
+    
+    /* VISUAL */
+    border-bottom: 1px solid var(--border-table-cell, #e5e7eb);
+    
+    /* BEHAVIOR */
+    vertical-align: top;
+}
+
+/**
+ * TABLE ROW HOVER
+ */
+.markdown tr:hover, .markdown-content tr:hover, .blog-content tr:hover {
+    background: var(--bg-table-row-hover, #f9fafb);
+}
+
+/* ==========================================================================
+   HORIZONTAL RULES - Section dividers
+   ========================================================================== */
+
+/**
+ * HORIZONTAL RULE STYLING
+ */
+.markdown hr, .markdown-content hr, .blog-content hr {
+    /* VISUAL */
+    border: none;
+    border-top: 2px solid var(--border-hr, #e5e7eb);
+    
+    /* SPACING */
+    margin: 2em 0;
+    
+    /* LAYOUT */
+    width: 100%;
+    height: 0;
+}
+
+/* ==========================================================================
+   IMAGES - Responsive and accessible
+   ========================================================================== */
+
+/**
+ * IMAGE STYLING
+ */
+.markdown img, .markdown-content img, .blog-content img {
+    /* RESPONSIVE */
+    max-width: 100%;
+    height: auto;
+    
+    /* VISUAL */
+    border-radius: 8px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    
+    /* SPACING */
+    margin: 1em 0;
+    
+    /* BEHAVIOR */
+    display: block;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.markdown img:hover, .markdown-content img:hover, .blog-content img:hover {
+    transform: scale(1.02);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+/* ==========================================================================
+   RESPONSIVE DESIGN - Mobile optimizations
+   ========================================================================== */
+
+/**
+ * MOBILE ADJUSTMENTS
+ */
+@media (max-width: 768px) {
+    .markdown, .markdown-content, .blog-content {
+        font-size: 14px;
+        line-height: 1.7;
+    }
+    
+    .markdown ul, .markdown-content ul, .blog-content ul,
+    .markdown ol, .markdown-content ol, .blog-content ol {
+        padding-left: 1.5em;
+    }
+    
+    .markdown blockquote, .markdown-content blockquote, .blog-content blockquote {
+        padding: 0.75em 1em;
+        margin: 1em 0;
+    }
+    
+    .markdown pre, .markdown-content pre, .blog-content pre {
+        padding: 0.75em;
+        font-size: 0.8rem;
+    }
+    
+    .markdown table, .markdown-content table, .blog-content table {
+        font-size: 0.8em;
+    }
+    
+    .markdown th, .markdown-content th, .blog-content th,
+    .markdown td, .markdown-content td, .blog-content td {
+        padding: 0.5em 0.75em;
+    }
+}
+
+/* ==========================================================================
+   PRINT STYLES - Clean printing
+   ========================================================================== */
+
+@media print {
+    .markdown, .markdown-content, .blog-content {
+        color: black;
+        background: white;
+    }
+    
+    .markdown a, .markdown-content a, .blog-content a {
+        color: black;
+        text-decoration: underline;
+    }
+    
+    .markdown pre, .markdown-content pre, .blog-content pre {
+        background: #f5f5f5;
+        color: black;
+        border: 1px solid #ccc;
+    }
+    
+    .markdown blockquote, .markdown-content blockquote, .blog-content blockquote {
+        background: #f9f9f9;
+        border-left: 4px solid #ccc;
+    }
+}

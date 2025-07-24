@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Logged out{% endblock %}
+
+{% block content %}
+    <div class="card">
+        <div class="card-header">
+            <h2>Logged out</h2>
+            <p style="color: var(--color-accent-success)">You have been successfully logged out.</p>
+        </div>
+        <div class="form-after">
+            <a href="{% url 'login' %}">Log in again</a>
+        </div>
+    </div>
+{% endblock %}

@@ -1,5 +1,6 @@
 let rightClickMenuSelectedFile;
 let selectedFiles = [];
+let currentFile = null
 
 
 function resetSelectedFiles() {

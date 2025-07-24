@@ -1,0 +1,30 @@
+{% if form.title or form.text %}
+<div class="card">
+    <div class="card-header">
+        {% if form.title %}<h1>{{ form.title }}</h1>{% endif %}
+        {% if form.text %}<p>{{ form.text }}</p>{% endif %}
+    </div>
+    {% endif %}
+    <form class="form-group" method="post">
+        {% csrf_token %}
+        {% for field in form.data %}
+            <div class="form-group-div">
+                {{ field.label_tag }}
+                {{ field }}
+                {% if field.errors %}
+                    <div style="color: var(--color-accent-error)">{{ field.errors }}</div>
+                {% endif %}
+            </div>
+        {% endfor %}
+        <ul class = "form-buttons">
+            {% for button in form.buttons %}
+                <li>
+                    <button type="{{ button.type }}" class="btn btn-{{ button.class }}">{{ button.text }}</button>
+                </li>
+            {% endfor %}
+        </ul>
+        <div>
+            <button type="submit" class="btn btn-primary">{{ form.button_text }}</button>
+        </div>
+    </form>
+</div>

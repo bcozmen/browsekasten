@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Log-in{% endblock %}
+
+{% block content %}
+    <div class = "card">
+        <div class="card-header">
+            <h2>Log-in</h2>
+            {% if form.errors %}
+                <p style="color: var(--color-accent-error)">
+                    Your username and password didn't match.
+                    Please try again.
+                </p>
+            {% else %}
+                <p>Please, use the following form to log-in:</p>
+            {% endif %}
+        </div>
+
+        <form class="form-group" method="post">
+            {% csrf_token %}
+            {% for field in form %}
+                <div class="form-group-div">
+                    {{ field.label_tag }}
+                    {{ field }}
+                    {% if field.errors %}
+                        <div style="color: var(--color-accent-error)">{{ field.errors }}</div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+
+            
+            <input type="hidden" name="next" value="{{ next }}" />
+            <div>
+                <button type="submit">Log in</button>
+            </div>
+        </form>
+        <div class = "form-after">
+            <p><a href="{% url 'password_reset' %}">Forgotten your password?</a></p>
+            <p>If you don't have an account <a href="{% url 'register' %}">register here</a>.</p>
+        </div>
+    </div>
+{% endblock %}

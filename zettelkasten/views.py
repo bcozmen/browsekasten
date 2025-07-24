@@ -1,7 +1,7 @@
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
-from .models import Zettel
+from .models import Zettel, Folder
 from django.views.decorators.http import require_POST
 import json
 from django.utils.text import slugify   
@@ -9,11 +9,28 @@ from django.utils.safestring import mark_safe
 import markdown
 import re
 #mark_safe(markdown.markdown(content))
+
+def get_folder_tree(folder):
+    return {
+        'name': folder.name,
+        'children': [get_folder_tree(child) for child in folder.children.all()],
+        'zettels': list(folder.zettels.all())
+    }
 @login_required
 def editor(request):
+    root_folders = Folder.objects.filter(author=request.user, parent=None).order_by('-created')
+    root_zettels = Zettel.objects.filter(author=request.user, folder__isnull=True).order_by('-created')
+
+    childeren = [get_folder_tree(f) for f in root_folders]
     zettels = Zettel.objects.filter(author=request.user).order_by('-created')
+
+    folder_tree = {
+        'name': 'Root',
+        'children': childeren,
+        'zettels': list(root_zettels)
+    }
     context = {
-        'zettels': zettels,
+        'folder_tree': folder_tree,
     }
     return render(request, 'zettelkasten/zettelkasten_home.html', context)
 

@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+
+<script src="{% static 'js/dom.js' %}"></script>
+<script src="{% static 'js/utils.js' %}"></script>
+<script src="{% static 'js/api.js' %}"></script>
+
+
+
+<div class="zettelkasten-container">
+    <div class="file-manager-container" >
+        {% include "zettelkasten/file_manager/_file_manager_bar.html" %}
+        {% include "zettelkasten/file_manager/file_manager.html" %}
+    </div>
+    <div class="resizer" id="resizer1"></div>
+    <div class="editor-container" >
+        {% include "zettelkasten/editor/editor.html" %}
+    </div>
+    <div class="resizer" id="resizer2"></div>
+    <div class="viewer-container">
+        <div class="editor-bar"></div>
+        <!-- {% include "zettelkasten/viewer.html" %} -->
+    </div>
+</div>
+
+{% block extra_js %}
+<!-- Resize functionality -->
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/turndown/dist/turndown.min.js"></script>
+{% endblock %}
+
+
+{% endblock %}
+

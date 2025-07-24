@@ -1,0 +1,9 @@
+{% load blog_tags %}
+
+
+<div class="blog-post-container">
+    <h1 class="blog-post-title">{{ blog_post.slug|deslug|capitalize_first }}</h1>
+    <p class="blog-post-created">{{ blog_post.created }}</p>
+    <hr>
+    <p class="blog-post-content">{{ blog_post.content|markdown }}</p>
+</div>

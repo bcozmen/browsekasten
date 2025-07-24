@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Zettel
+from .models import Zettel, Folder
 
 
 
@@ -12,3 +12,13 @@ class ZettelAdmin(admin.ModelAdmin):
     raw_id_fields = ['author']
     date_hierarchy = 'created'
     ordering = ['-created']
+
+@admin.register(Folder)
+class FolderAdmin(admin.ModelAdmin):
+    list_display = ['name', 'parent', 'created', 'updated']
+    list_filter = ['created', 'updated']
+    search_fields = ['name']
+    raw_id_fields = ['parent']
+    date_hierarchy = 'created'
+    ordering = ['-created']
+    

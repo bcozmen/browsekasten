@@ -1,0 +1,64 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="BrowseKasten - Zettelkasten IDE">
+    <!-- Use a CSS variable for theme-color, updated by JS for dark mode support -->
+    <meta name="theme-color" id="theme-color-meta" content="#1a472a">
+    <title>{% block title %}Zettelkasten IDE{% endblock %} - BrowseKasten</title>
+    <link href="{% static 'css/main.css' %}?v=1" rel="stylesheet">
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body class="zettelkasten-ide">
+    <!-- Invisible trigger zone for navbar reveal -->
+    
+    <!-- Retractable Navigation Menu -->
+    <nav>
+        <div class="navbar-left">
+            <a href="/" class="icon">BrowseKasten</a>
+        </div>
+        <div class="navbar-mid responsive-container">
+            <ul >
+                <li class = "navbar-btn"><a href="/account/">Account</a></li>
+                <li  class = "navbar-btn"><a href="/zettelkasten/">Zettelkasten</a></li>
+                <li class = "navbar-btn"><a  href="/blog/">Blog</a></li>
+                <li class = "navbar-btn"><a href="/graph/">Network</a></li>
+                
+            </ul>
+        </div>
+        <div class = "navbar-right">
+            {% if request.user.is_authenticated %}
+                <span>Hello {{ request.user.first_name|default:request.user.username }}</span>
+                <ul>
+                    
+                    <li class="navbar-btn">
+                        <form action="{% url "logout" %}" method="post">
+                            {% csrf_token %}
+                            <button type="submit">Logout</button>
+                        </form>
+                    </li>
+                </ul>
+            {% else %}
+                <ul class="navbar-right-links">
+                    <li class="navbar-btn" ><a href="{% url 'login' %}">Log in</a></li>
+                    <li class="navbar-btn"><a href="{% url 'register' %}">Register</a></li>
+                </ul>
+            {% endif %}
+        </div>
+    </nav>
+
+    <main>
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <!-- Footer is intentionally removed for IDE view -->
+
+    {% block extra_js %}{% endblock %}
+    <script type="module" src="{% static 'js/main.js' %}"></script>
+</body>
+</html>

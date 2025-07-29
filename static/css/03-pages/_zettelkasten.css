@@ -22,10 +22,20 @@
 
 .file-manager-container::-webkit-scrollbar {
     width: 6px;
-    background-color: var(--color-secondary-300);
+    background-color: var(--card-bg);
 }
 
 .file-manager-container::-webkit-scrollbar-thumb {
+    background-color: var(--color-primary-300);
+    border-radius: 4px;
+}
+
+.editor-container::-webkit-scrollbar {
+    width: 6px;
+    background-color: var(--card-bg);
+}
+
+.editor-container::-webkit-scrollbar-thumb {
     background-color: var(--color-primary-300);
     border-radius: 4px;
 }

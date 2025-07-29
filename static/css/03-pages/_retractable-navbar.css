@@ -1,0 +1,168 @@
+/* ==========================================================================
+   RETRACTABLE NAVBAR FOR ZETTELKASTEN IDE
+   ========================================================================== */
+
+/* 
+ * This creates a navbar that:
+ * - Hides by default (showing only a small indicator)
+ * - Appears when hovering near the top of the screen
+ * - Uses CSS variables for maximum modularity
+ * - Provides smooth animations and clear visual feedback
+ */
+
+/* === Base Retractable Navbar Styles === */
+.zettelkasten-ide nav {
+    position: fixed;
+    top: var(--navbar-hidden-offset);
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    
+    height: var(--navbar-height);
+    
+    /* Base navbar styling */
+    background-color: var(--navbar-bg);
+    font-family: var(--font-family-nav);
+    text-shadow: var(--text-shadow-base);
+    
+    /* Layout same as regular navbar */
+    display: flex;
+    width: 100%;
+    
+    /* Enhanced styling */
+    backdrop-filter: blur(var(--navbar-backdrop-blur));
+    -webkit-backdrop-filter: blur(var(--navbar-backdrop-blur));
+    box-shadow: var(--navbar-shadow-hidden);
+    
+    /* Smooth transitions using variables */
+    transition: 
+        transform var(--navbar-transition-duration) var(--navbar-transition-easing),
+        box-shadow var(--navbar-transition-duration) var(--navbar-transition-easing);
+    
+    /* Ensure content is clickable when visible */
+    pointer-events: auto;
+}
+
+/* === Trigger Zone === */
+.zettelkasten-ide::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--navbar-trigger-zone);
+    z-index: 999;
+    pointer-events: auto;
+    background: transparent;
+}
+
+/* === Show navbar on hover === */
+.zettelkasten-ide::before:hover ~ nav,
+.zettelkasten-ide nav:hover {
+    transform: translateY(calc(-1 * var(--navbar-hidden-offset)));
+    box-shadow: var(--navbar-shadow-visible);
+}
+
+/* === Navbar Indicator === */
+.zettelkasten-ide nav::after {
+    content: '⌄'; /* Down chevron to indicate expandable */
+    position: absolute;
+    bottom: calc(-1 * var(--navbar-indicator-size) + 4px);
+    left: 50%;
+    transform: translateX(-50%);
+    
+    width: var(--navbar-indicator-size);
+    height: var(--navbar-indicator-size);
+    
+    background: var(--navbar-indicator-bg);
+    color: var(--navbar-indicator-text);
+    
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-bold);
+    
+    cursor: pointer;
+    user-select: none;
+    
+    transition: 
+        background-color var(--navbar-transition-duration) var(--navbar-transition-easing),
+        transform var(--navbar-transition-duration) var(--navbar-transition-easing);
+}
+
+/* === Indicator hover effect === */
+.zettelkasten-ide nav::after:hover {
+    background: var(--navbar-indicator-hover-bg);
+    transform: translateX(-50%) scale(1.1);
+}
+
+/* === Hide indicator when navbar is visible === */
+.zettelkasten-ide::before:hover ~ nav::after,
+.zettelkasten-ide nav:hover::after {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-8px);
+}
+
+/* === Full-screen main content === */
+.zettelkasten-ide main {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    
+    /* Remove default main centering for IDE */
+    justify-content: stretch;
+    align-items: stretch;
+    
+    /* Ensure content starts from top */
+    padding: 0;
+    margin: 0;
+}
+
+/* === Responsive adjustments === */
+@media (max-width: 768px) {
+    :root {
+        --navbar-indicator-size: 28px;
+        --navbar-trigger-zone: 80px; /* Larger touch target on mobile */
+    }
+    
+    .zettelkasten-ide nav::after {
+        font-size: var(--font-size-xs);
+    }
+}
+
+/* === Accessibility improvements === */
+@media (prefers-reduced-motion: reduce) {
+    .zettelkasten-ide nav {
+        transition: none;
+    }
+    
+    .zettelkasten-ide nav::after {
+        transition: none;
+    }
+}
+
+/* === Focus improvements === */
+.zettelkasten-ide nav:focus-within {
+    transform: translateY(calc(-1 * var(--navbar-hidden-offset)));
+    box-shadow: var(--navbar-shadow-visible);
+}
+
+/* === Alternative indicator styles (can be enabled via modifier classes) === */
+.zettelkasten-ide.navbar-indicator-dots nav::after {
+    content: '⋯'; /* Three dots */
+}
+
+.zettelkasten-ide.navbar-indicator-burger nav::after {
+    content: '☰'; /* Hamburger menu */
+}
+
+.zettelkasten-ide.navbar-indicator-arrow nav::after {
+    content: '↓'; /* Down arrow */
+}

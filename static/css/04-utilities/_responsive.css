@@ -16,25 +16,6 @@
 
 /* Mobile styles (default: mobile-first) */
 
-/* Tablet and up */
-@media (min-width: 601px) {
-  .show-tablet { display: block !important; }
-  .hide-tablet { display: none !important; }
-}
-
-/* Desktop and up */
-@media (min-width: 901px) {
-  .show-desktop { display: block !important; }
-  .hide-desktop { display: none !important; }
-}
-
-/* TV and very large screens */
-@media (min-width: 1600px) {
-  .show-tv { display: block !important; }
-  .hide-tv { display: none !important; }
-  html { font-size: 1.25rem; } /* Slightly larger base font for TVs */
-}
-
 /* Example: Responsive container */
 .responsive-container {
   max-width: var(--container-max-width, 800px);

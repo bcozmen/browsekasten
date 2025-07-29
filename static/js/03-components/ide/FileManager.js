@@ -192,7 +192,6 @@ class FileManager {
         const folderContent = folder.querySelector('.folder-content');
         const folderName = folderElement; // folderElement is already the .folder-name
         const folderId = this.getFolderId(folder);
-        const isRootFolder = folder.classList.contains('root-folder');
         
         // Check if folder is currently expanded using the CSS class instead of inline style
         const isExpanded = folderName.classList.contains('expanded');
@@ -374,7 +373,7 @@ class FileManager {
         // Get current folder context
         const selectedFolder = this.getSelectedFolderContext();
         
-        const fileName = prompt('Enter file name:', 'Untitled.md');
+        const fileName = prompt('Enter file name:', 'Untitled');
         if (fileName) {
             if (this.onFileCreate) {
                 this.onFileCreate(fileName, selectedFolder);

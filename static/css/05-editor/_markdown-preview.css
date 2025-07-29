@@ -226,21 +226,6 @@
     margin: var(--spacing-md) 0;
 }
 
-/* Task Lists */
-.markdown .task-list-item {
-    list-style: none;
-    position: relative;
-    padding-left: var(--spacing-lg);
-}
-
-.markdown .task-list-item input[type="checkbox"] {
-    position: absolute;
-    left: 0;
-    top: 0.3em;
-    margin: 0;
-    accent-color: var(--color-primary-500);
-}
-
 /* Live Preview Specific Styles */
 .cm-s-mytheme .markdown-rendered {
     /* Styles for rendered markdown lines */

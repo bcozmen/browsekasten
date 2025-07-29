@@ -45,7 +45,7 @@
 }
 
 .file-manager-container .folder-name:not(.expanded):not(.files)::before {
-    content: '▶';
+    content: '▼';
     margin-right: 4px;
     font-size: 12px;
     color: var(--color-tertiary-500);
@@ -229,11 +229,6 @@
 
 .zettelkasten-container.resizing .resizer {
     pointer-events: all;
-}
-
-/* Panel collapse states */
-.panel-collapsed {
-    display: none !important;
 }
 
 /* Editor container with tabs */

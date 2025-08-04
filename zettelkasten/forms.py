@@ -4,7 +4,7 @@ from .models import Zettel
 class ZettelForm(forms.ModelForm):
     class Meta:
         model = Zettel
-        fields = ['title', 'content']
+        fields = ['name', 'content']
         widgets = {
             'content': forms.Textarea(attrs={'rows': 50, 'id': 'markdown-editor'}),
         }

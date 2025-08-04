@@ -5,6 +5,7 @@
     display: flex;
     height: 100%;
     overflow : auto; /* Allow scrolling if content overflows */
+    flex-direction: column;
 }
 
 .file-manager::-webkit-scrollbar {
@@ -17,9 +18,8 @@
     border-radius: 4px;
 }
 
-.file-manager-content {
-    width: 100%;
-}
+
+
 
 
 /* Folder styles */
@@ -62,9 +62,7 @@
     transition: max-height 0.3s ease, opacity 0.3s ease;
 }
 .folder.retracted > .folder-content {
-    max-height: 0;
-    opacity: 0;
-    transition: max-height 0.3s ease, opacity 0.3s ease;
+    display : none; /* Hide content when retracted */
 }
 
 /* Show open folder icon/path by default, closed when retracted */
@@ -129,6 +127,7 @@
     background-color: var(--border-medium-inv);
     border-radius: var(--radius-sm);
     border: 0.5px solid var(--border-light);
+
 }
 
 
@@ -139,3 +138,7 @@
     border: 0.5px solid var(--border-light);
 }
 
+
+.file-not-found {
+    display : none;
+}

@@ -13,7 +13,7 @@ def network(request):
     graph_data = []
     for zettel in zettels:
         graph_data.append({
-            'data': {'id': zettel.title, 'label': zettel.title},
+            'data': {'id': zettel.name, 'label': zettel.name},
         })
 
     pattern = r'\[.*?\]\(.*?\)'
@@ -23,9 +23,9 @@ def network(request):
         if re.search(pattern, zettel.content):
             matches = re.findall(pattern, zettel.content)
             for match in matches:
-                this_id = zettel.title
+                this_id = zettel.name
                 that_id = match.split("(")[1].split(")")[0]
-                if Zettel.objects.filter(title=that_id).exists():
+                if Zettel.objects.filter(name=that_id).exists():
                     graph_data.append({
                         'data': {'source': this_id, 'target': that_id},
                     })

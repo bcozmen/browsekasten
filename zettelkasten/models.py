@@ -52,8 +52,39 @@ class Folder(models.Model):
         )
         return root_folder
 
+class File(models.Model):
+    name = models.CharField(max_length=250)
+    folder = models.ForeignKey(Folder, on_delete=models.CASCADE, related_name='files', null=True, blank=True)  # Now required
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='files')
+    file = models.FileField(upload_to='files/')
+
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created']
+        indexes = [
+            models.Index(fields=['-created']),
+        ]
+        unique_together = ('author', 'folder', 'name')
+
+    def __str__(self):
+        return self.name
+
+    def get_path(self):
+        """Get the full path from root to this zettel file"""
+        # Get the folder path and append the filename
+        folder_path = self.folder.get_path()
+        return folder_path + self.name
+
+    def save(self, *args, **kwargs):
+        # Ensure every zettel has a folder (default to user's root if none provided)
+        if not self.folder_id:
+            self.folder = Folder.get_user_root(self.author)
+        super().save(*args, **kwargs)
+
 class Zettel(models.Model):
-    title = models.CharField(max_length=250)
+    name = models.CharField(max_length=250)
     tags = TaggableManager(blank=True)
 
     folder = models.ForeignKey(Folder, on_delete=models.CASCADE, related_name='zettels')  # Now required
@@ -70,22 +101,29 @@ class Zettel(models.Model):
             models.Index(fields=['-created']),
         ]
         unique_together = [
-            ('author', 'folder', 'title'),  # Only need per-folder uniqueness now
+            ('author', 'folder', 'name'),  # Only need per-folder uniqueness now
         ]
 
     def __str__(self):
-        return self.title
+        return self.name
     
     def get_path(self):
         """Get the full path from root to this zettel file"""
         # Get the folder path and append the filename
         folder_path = self.folder.get_path()
-        return folder_path + self.title
+        return folder_path + self.name
+    
+    def update_tags(self):
+        """Update tags for this zettel"""
+        # This method can be expanded to handle tag updates if needed
+        pass
     
     def save(self, *args, **kwargs):
         # Ensure every zettel has a folder (default to user's root if none provided)
         if not self.folder_id:
             self.folder = Folder.get_user_root(self.author)
         super().save(*args, **kwargs)
+        # Call update_tags to ensure tags are updated after saving
+        self.update_tags()
     
 

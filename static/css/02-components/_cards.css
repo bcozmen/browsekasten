@@ -28,8 +28,6 @@
     padding-bottom: var(--spacing-10);
 }
 
-
-
 .card-header {
     margin-bottom: var(--spacing-6);
 
@@ -58,3 +56,5 @@
     margin-bottom: 0;
     
 }
+
+

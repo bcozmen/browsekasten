@@ -1,40 +1,3 @@
-/**
- * =====================================================================================
- * FileManager.js - Event-Driven File Manager
- * =====================================================================================
- * 
- * OVERVIEW:
- * Event-driven file manager that handles folder expand/collapse functionality
- * and file selection. Uses CustomEvent system for clean integration with other components.
- * 
- * FEATURES:
- * - Folder expand/collapse with "retracted" class toggle
- * - File selection handling with multi-select support
- * - Event-driven architecture with rich event data
- * - Keyboard navigation and shortcuts
- * - Toolbar actions (create, upload, download, rename, delete)
- * 
- * EVENTS EMITTED:
- * - 'fileSelected': When a file is opened for viewing/editing
- * - 'fileCreate': When new file creation is requested
- * - 'folderCreate': When new folder creation is requested  
- * - 'fileUpload': When files are selected for upload
- * - 'fileDownload': When selected files should be downloaded
- * - 'itemRename': When an item should be renamed
- * - 'itemDelete': When selected items should be deleted
- * 
- * USAGE:
- * ```javascript
- * const fileManager = new FileManager('.file-manager-container');
- * 
- * // Listen for events
- * fileManager.container.addEventListener('fileSelected', (e) => {
- *     // Handle file selection
- * });
- * ```
- * =====================================================================================
- */
-
 class FileManager {
     constructor(containerSelector, options = {}) {
         this.container = document.querySelector(containerSelector);
@@ -54,8 +17,9 @@ class FileManager {
         // State
         this.selectedFiles = [];
         this.activeFile = null;
-        this.focusedFolder = null;    // Folder where new files will be created
-
+        this.rootFolder = this.container.querySelector('.folder[data-is-root="true"]'); // Folder where new files will be created
+        this.parentFolder = this.container.querySelector('.folder[data-is-root="true"]'); // Folder where new files will be created
+        this.setParentFolder(this.parentFolder);
         // Initialize
         this.init();
     }
@@ -67,82 +31,31 @@ class FileManager {
         try {
             this.setupEventListeners();
             this.setupToolbarHandlers();
-            this.setupFocusedFolder();
         } catch (error) {
         }
     }
 
-    /**
-     * Set up event listeners
-     */
-    setupEventListeners() {
-        // Handle file clicks for selection
-        this.container.addEventListener('click', (e) => {
-            const fileElement = e.target.closest('.file');
-            const folderElement = e.target.closest('.folder');
-            const arrowElement = e.target.closest('.arrow');
-
-            if (fileElement) {
-                this.handleFileClick(e, fileElement);
-            }
-            else if (arrowElement && folderElement) {
-                this.toggleFolder(folderElement);
-            }
-            else if (folderElement) {
-                this.handleFolderClick(e, folderElement);
-            } else {
-                console.log('Clicked on unhandled element:', e.target);
-            }
-        });
-    }
-
-    setupFocusedFolder() {
-        // Focus on root folder at initialization
-        const rootFolder = this.container.querySelector('.folder[data-is-root="true"]') || 
-                          this.container.querySelector('.folder[data-name="root"]') ||
-                          this.container.querySelector('.folder');
-        
-        if (rootFolder) {
-            this.setFocusedFolder(rootFolder);
-        }
-    }
-
-    /**
-     * Handle file click with selection logic
-     */
-    handleFileClick(e, fileElement) {
-        e.stopPropagation();
-
-        if (e.ctrlKey) {
-            this.selectFile(fileElement);
-        } else if (e.shiftKey && this.activeFile) {
-        } else {
-            // Normal click: Single selection
-            this.clearFileSelection();
-            this.selectFile(fileElement);
-            this.activeFile = fileElement;
-            this.emit('file-manager:fileSelected', fileElement);
-        }
-
-        // Set focused folder to the parent folder of selected file
-        const parentFolder = this.getParentFolder(fileElement);
-        if (parentFolder) {
-            this.setFocusedFolder(parentFolder);
-        }
-    }
-
-    handleFolderClick(e, folderElement) {
-        if (e.ctrlKey){
-            this.selectFile(folderElement);
-        }
-    }
     getParentFolder(fileElement) {
         return fileElement.closest('.folder');
     }
+    setParentFolder(folderElement) {
+        // Remove previous focused folder styling
+        if (this.parentFolder) {
+            const prevFolderName = this.parentFolder.querySelector('.folder-name');
+            if (prevFolderName) {
+                prevFolderName.classList.remove('folder-focused');
+            }
+        }
+        this.parentFolder = folderElement;
+        // Add focused folder styling
+        if (folderElement) {
+            const folderName = folderElement.querySelector('.folder-name');
+            if (folderName) {
+                folderName.classList.add('folder-focused');
+            }
+        }
+    }
 
-    /**
-     * Toggle folder expand/collapse
-     */
     toggleFolder(folderElement) {
         const isRetracted = folderElement.classList.contains('retracted');
         
@@ -156,11 +69,345 @@ class FileManager {
 
     }
 
-    selectFile(fileElement) {
-        if(fileElement.dataset.type !== 'folder') {
 
+    /**
+     * Set up event listeners
+     */
+    setupEventListeners() {
+        // Handle file clicks for selection
+        this.container.addEventListener('click', (e) => {
+            const fileElement = e.target.closest('.file');
+            const folderElement = e.target.closest('.folder');
+
+            const arrowElement = e.target.closest('.arrow');
+            
+            if (arrowElement){
+                this.toggleFolder(folderElement);
+            }
+            else if (fileElement || folderElement) {
+                this.handleFileClick(e, fileElement || folderElement);
+            }
+            else {
+                console.log('Clicked on unhandled element:', e.target);
+            }
+        });
+
+        // Set up drag and drop for folders and files
+        this.setupDragAndDrop();
+    }
+
+    /**
+     * Set up drag and drop functionality
+     */
+    setupDragAndDrop() {
+        // Make folders and files draggable
+        this.container.addEventListener('mousedown', (e) => {
+            const draggableElement = e.target.closest('.file, .folder');
+            if (draggableElement && !e.target.closest('.arrow')) {
+                draggableElement.draggable = true;
+            }
+        });
+
+        // Drag start
+        this.container.addEventListener('dragstart', (e) => {
+            const draggedElement = e.target.closest('.file, .folder');
+            if (!draggedElement) return;
+
+            // Don't allow dragging root folder
+            if (draggedElement.dataset.isRoot === 'true') {
+                e.preventDefault();
+                return;
+            }
+
+            e.dataTransfer.setData('text/plain', ''); // Required for Firefox
+            e.dataTransfer.effectAllowed = 'move';
+            
+            // Store dragged element info
+            this.draggedElement = draggedElement;
+            draggedElement.classList.add('dragging');
+        });
+
+        // Drag over folders (to show drop zones)
+        this.container.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            const folder = e.target.closest('.folder');
+            if (folder && folder !== this.draggedElement) {
+                e.dataTransfer.dropEffect = 'move';
+                folder.classList.add('drop-target');
+            }
+        });
+
+        // Drag leave folders
+        this.container.addEventListener('dragleave', (e) => {
+            const folder = e.target.closest('.folder');
+            if (folder) {
+                folder.classList.remove('drop-target');
+            }
+        });
+
+        // Drop
+        this.container.addEventListener('drop', (e) => {
+            e.preventDefault();
+            const targetFolder = e.target.closest('.folder');
+            
+            if (targetFolder && this.draggedElement && targetFolder !== this.draggedElement) {
+                this.handleDrop(this.draggedElement, targetFolder);
+            }
+            
+            // Clean up
+            this.cleanupDrag();
+        });
+
+        // Drag end
+        this.container.addEventListener('dragend', (e) => {
+            this.cleanupDrag();
+        });
+    }
+
+    /**
+     * Handle dropping an item into a folder
+     */
+    async handleDrop(draggedElement, targetFolder) {
+        const targetFolderId = targetFolder.dataset.folderId;
+        
+        // Determine which items to move
+        let itemsToMove = [];
+        
+        if (this.selectedFiles.length > 0 && this.selectedFiles.includes(draggedElement)) {
+            // If dragged element is part of selection, move all selected items
+            itemsToMove = [...this.selectedFiles];
+        } else {
+            // Otherwise, just move the dragged element
+            itemsToMove = [draggedElement];
         }
 
+        // Validate all items before moving any
+        for (const item of itemsToMove) {
+            const itemType = item.dataset.type;
+            
+            // Don't allow moving root folder
+            if (item.dataset.isRoot === 'true') {
+                this.showMessage('Cannot move root folder', 'warning');
+                return;
+            }
+            
+            // Don't allow dropping folder into itself or its children
+            if (itemType === 'folder' && this.isDescendantOf(targetFolder, item)) {
+                this.showMessage('Cannot move folder into itself or its children', 'warning');
+                return;
+            }
+            
+            // Don't allow dropping into the same parent
+            const currentParent = item.closest('.folder');
+            if (currentParent === targetFolder) {
+                this.showMessage('Items are already in this folder', 'warning');
+                return;
+            }
+        }
+
+        // Move all valid items
+        let successCount = 0;
+        let failCount = 0;
+        
+        for (const item of itemsToMove) {
+            const itemType = item.dataset.type;
+            const itemId = itemType === 'folder' ? item.dataset.folderId : item.dataset.id;
+            
+            try {
+                const response = await fetch(`/zettelkasten/zettel/${itemType}/${itemId}/move/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': this.getCSRFToken()
+                    },
+                    body: JSON.stringify({ 
+                        target_folder_id: targetFolderId 
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Move the element in the DOM
+                    const targetContent = targetFolder.querySelector(':scope > .folder-content');
+                    if (targetContent) {
+                        targetContent.appendChild(item);
+                        successCount++;
+                    } else {
+                        // If target doesn't have content area, reload
+                        window.location.reload();
+                        return;
+                    }
+                } else {
+                    console.error(`Failed to move ${itemType}:`, data.error);
+                    failCount++;
+                }
+            } catch (error) {
+                console.error(`Error moving ${itemType}:`, error.message);
+                failCount++;
+            }
+        }
+
+        // Show summary message
+        if (successCount > 0 && failCount === 0) {
+            const itemText = successCount === 1 ? 'item' : 'items';
+            this.showMessage(`Moved ${successCount} ${itemText} successfully`, 'success');
+        } else if (successCount > 0 && failCount > 0) {
+            this.showMessage(`Moved ${successCount} items, ${failCount} failed`, 'warning');
+        } else {
+            this.showMessage(`Failed to move items`, 'fail');
+        }
+
+        // Reorder the target folder and source folders to maintain proper ordering
+        this.reorderFolderContents(targetFolder);
+        
+        // Also reorder the source folders (where items were moved from)
+        const sourceFolders = new Set();
+        itemsToMove.forEach(item => {
+            const sourceFolder = item.closest('.folder');
+            if (sourceFolder && sourceFolder !== targetFolder) {
+                sourceFolders.add(sourceFolder);
+            }
+        });
+        sourceFolders.forEach(folder => this.reorderFolderContents(folder));
+
+        // Clear selection after move
+        this.clearFileSelection();
+    }
+
+    /**
+     * Reorder items in a folder: folders first, then zettels, then files (alphabetically within each group)
+     */
+    reorderFolderContents(folderElement) {
+        const folderContent = folderElement.querySelector(':scope > .folder-content');
+        if (!folderContent) return;
+
+        // Get all direct children
+        const allItems = Array.from(folderContent.children);
+        
+        // Separate items by type
+        const folders = allItems.filter(item => item.dataset.type === 'folder');
+        const zettels = allItems.filter(item => item.dataset.type === 'zettel');
+        const files = allItems.filter(item => item.dataset.type === 'file');
+
+        // Sort each group alphabetically by name
+        const sortByName = (a, b) => {
+            const nameA = a.querySelector('.folder-name p')?.textContent.toLowerCase() || '';
+            const nameB = b.querySelector('.folder-name p')?.textContent.toLowerCase() || '';
+            return nameA.localeCompare(nameB);
+        };
+
+        folders.sort(sortByName);
+        zettels.sort(sortByName);
+        files.sort(sortByName);
+
+        // Remove all items from DOM
+        allItems.forEach(item => item.remove());
+
+        // Add them back in correct order: folders, zettels, files
+        [...folders, ...zettels, ...files].forEach(item => {
+            folderContent.appendChild(item);
+        });
+    }
+
+    /**
+     * Recursively reorder all folder contents in the tree
+     */
+    reorderAllFolders() {
+        const allFolders = this.container.querySelectorAll('.folder');
+        allFolders.forEach(folder => {
+            this.reorderFolderContents(folder);
+        });
+    }
+
+    /**
+     * Check if target is a descendant of source folder
+     */
+    isDescendantOf(target, source) {
+        let current = target.parentElement;
+        while (current && current !== this.container) {
+            if (current === source) {
+                return true;
+            }
+            current = current.parentElement;
+        }
+        return false;
+    }
+
+    /**
+     * Clean up drag and drop state
+     */
+    cleanupDrag() {
+        if (this.draggedElement) {
+            this.draggedElement.classList.remove('dragging');
+            this.draggedElement.draggable = false;
+            this.draggedElement = null;
+        }
+        
+        // Remove all drop target highlights
+        this.container.querySelectorAll('.drop-target').forEach(el => {
+            el.classList.remove('drop-target');
+        });
+    }
+
+
+    /**
+     * Handle file click with selection logic
+     */
+    handleFileClick(e, fileElement) {
+        e.stopPropagation();
+
+        if (e.ctrlKey) {
+            this.selectFile(fileElement);
+        } else if (e.shiftKey && this.activeFile) {
+            this.selectRange(fileElement);
+        } else {
+            // Normal click: Single selection
+            this.clearFileSelection();
+            this.selectFile(fileElement);
+            if (fileElement.dataset.type === 'zettel') {
+                this.activeFile = fileElement;
+                this.emit('file-manager:fileSelected', fileElement);
+            }
+            if (fileElement.dataset.type === 'folder') {
+                this.setParentFolder(fileElement);
+            }
+            else {
+                this.setParentFolder(this.getParentFolder(fileElement));
+            }
+        }
+    }
+
+    handleFolderClick(e, folderElement) {
+        if (e.ctrlKey){
+            this.selectFile(folderElement);
+        }
+    }
+
+    selectRange(fileElement) {
+        if (!this.activeFile) return;
+
+        const allFiles = Array.from(this.container.querySelectorAll('.file, .folder'));
+        const startIndex = allFiles.indexOf(this.activeFile);
+        const endIndex = allFiles.indexOf(fileElement);
+
+        if (startIndex === -1 || endIndex === -1) return;
+
+        const rangeStart = Math.min(startIndex, endIndex);
+        const rangeEnd = Math.max(startIndex, endIndex);
+
+        this.clearFileSelection();
+        
+        for (let i = rangeStart; i <= rangeEnd; i++) {
+            this.selectFile(allFiles[i]);
+        }
+    }
+
+
+
+
+
+    selectFile(fileElement) {
         if (this.selectedFiles.includes(fileElement)) {
             // Deselect file
             fileElement.classList.remove('file-selected');
@@ -171,51 +418,39 @@ class FileManager {
             this.selectedFiles.push(fileElement);
         }
         console.log('Selected files:', this.selectedFiles.map(f => {
-            if (f.dataset.id) {
-                return `file + ${f.dataset.id}`;
-            } else if (f.dataset.folderId) {
-                return `folder + ${f.dataset.folderId}`;
-            } else {
-                return 'unknown';
-            }
+           if (f.dataset.type === 'zettel') {
+               return 'zettel ' + `${f.dataset.id}`;
+           }
+           else if (f.dataset.type === 'folder') {
+               return 'folder ' + `${f.dataset.folderId}`;
+           }
+           else if (f.dataset.type === 'file') {
+               return 'file ' + `${f.dataset.id}`;
+           }
+            return f.dataset.id;
         }));
     }
 
     clearFileSelection() {
         this.selectedFiles.forEach(file => file.classList.remove('file-selected'));
         this.selectedFiles = [];
-        this.activeFile = null;
     }
 
 
-
-
-    /**
-     * Set focused folder (where new files will be created)
-     */
-    setFocusedFolder(folderElement) {
-        // Remove previous focused folder styling
-        if (this.focusedFolder) {
-            const prevFolderName = this.focusedFolder.querySelector('.folder-name');
-            if (prevFolderName) {
-                prevFolderName.classList.remove('folder-focused');
-            }
-        }
-        
-        this.focusedFolder = folderElement;
-        
-        // Add focused folder styling
-        if (folderElement) {
-            const folderName = folderElement.querySelector('.folder-name');
-            if (folderName) {
-                folderName.classList.add('folder-focused');
-            }
-        }
-    }
 
     setupToolbarHandlers() {
         const toolbar = this.container.querySelector('.tool-bar-container');
         if (!toolbar) return;
+        
+        // Set up search input listener
+        const searchInput = toolbar.querySelector('#find-input');
+        if (searchInput) {
+            // Listen for input events (real-time search as user types)
+            searchInput.addEventListener('input', (e) => {
+                const query = e.target.value.trim();
+                this.handleSearch(this.rootFolder, query);
+            });
+        }
         
         // Get all toolbar items
         const toolbarItems = toolbar.querySelectorAll('.tool-bar-item');
@@ -236,10 +471,13 @@ class FileManager {
                         this.handleNewFolder();
                         break;
                     case 'upload':
-                        this.handleUpload();
+                        this.handleUploadFiles();
                         break;
-                    case 'download':
-                        this.handleDownload();
+                    case 'upload_folder':
+                        this.handleUploadFolder();
+                        break;
+                    case 'download_folder':
+                        this.handleDownloadFolder();
                         break;
                     case 'search':
                         this.handleSearch();
@@ -259,7 +497,7 @@ class FileManager {
 
     // Toolbar action handlers
     async handleNewFile() {
-        const folderId = this.focusedFolder.dataset.folderId;
+        const folderId = this.parentFolder.dataset.folderId;
 
         try {
             const response = await fetch(`/zettelkasten/zettel/${folderId}/create_zettel/`, {
@@ -274,23 +512,23 @@ class FileManager {
             const data = await response.json();
 
             if (data.success) {
-                this.showMessage(`Created file: ${data.title}`, 'success');
+                this.showMessage(`Created file: ${data.name}`, 'success');
 
                 // Create and add the new file element to the DOM
                 
 
-                this.addNewFileToDOM(data.id, data.title);
+                this.addNewFileToDOM(data.id, data.name);
 
             } else {
-                this.showMessage(`Failed to create file: ${data.error}`, 'error');
+                this.showMessage(`Failed to create file: ${data.error}`, 'fail');
             }
         } catch (error) {
-            this.showMessage(`Error creating file: ${error.message}`, 'error');
+            this.showMessage(`Error creating file: ${error.message}`, 'fail');
         }
     }
 
     async handleNewFolder() {
-        const folderId = this.focusedFolder.dataset.folderId;
+        const folderId = this.parentFolder.dataset.folderId;
 
         try {
             const response = await fetch(`/zettelkasten/zettel/${folderId}/create_folder/`, {
@@ -311,30 +549,242 @@ class FileManager {
                 this.addNewFolderToDOM(data.id, data.name);
 
             } else {
-                this.showMessage(`Failed to create folder: ${data.error}`, 'error');
+                this.showMessage(`Failed to create folder: ${data.error}`, 'fail');
             }
         } catch (error) {
-            this.showMessage(`Error creating folder: ${error.message}`, 'error');   
+            this.showMessage(`Error creating folder: ${error.message}`, 'fail');
         }
 
 
        
     }
 
-    handleUpload() {
-      
+
+    // Separate method for files only
+    handleUploadFiles() {
+        const uploadInput = document.createElement('input');
+        uploadInput.type = 'file';
+        uploadInput.multiple = true;
+        // NO webkitdirectory = allows file selection only
+        uploadInput.style.display = 'none';
+
+        uploadInput.addEventListener('change', async (e) => {
+            const files = e.target.files;
+            if (files.length === 0) {
+                this.showMessage('No files selected for upload', 'warning');
+                return;
+            }
+
+            const formData = new FormData();
+            for (const file of files) {
+                formData.append('files', file);
+                formData.append('file_paths', file.name); // Just filename for individual files
+            }
+            
+            formData.append('folder_id', this.parentFolder.dataset.folderId);
+            formData.append('has_folder_structure', false);
+
+            // Same upload logic as before...
+            this.uploadToServer(formData);
+        });
+
+        document.body.appendChild(uploadInput);
+        uploadInput.click();
+        document.body.removeChild(uploadInput);
     }
 
-    handleDownload() {
-       
+    // Separate method for folders only
+    handleUploadFolder() {
+        const uploadInput = document.createElement('input');
+        uploadInput.type = 'file';
+        uploadInput.multiple = true;
+        uploadInput.webkitdirectory = true; // Enables folder selection
+        uploadInput.style.display = 'none';
+
+        uploadInput.addEventListener('change', async (e) => {
+            const files = e.target.files;
+            if (files.length === 0) {
+                this.showMessage('No folder selected for upload', 'warning');
+                return;
+            }
+
+            const formData = new FormData();
+            for (const file of files) {
+                formData.append('files', file);
+                formData.append('file_paths', file.webkitRelativePath);
+            }
+            
+            formData.append('folder_id', this.parentFolder.dataset.folderId);
+            formData.append('has_folder_structure', true);
+
+            // Same upload logic as before...
+            this.uploadToServer(formData);
+        });
+
+        document.body.appendChild(uploadInput);
+        uploadInput.click();
+        document.body.removeChild(uploadInput);
     }
 
-    handleSearch() {
+    // Extract common upload logic
+    async uploadToServer(formData) {
+        try {
+            const response = await fetch('/zettelkasten/zettel/upload/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': this.getCSRFToken()
+                },
+                body: formData
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                const hasFolderStructure = formData.get('has_folder_structure') === 'true';
+                const uploadType = hasFolderStructure ? 'folder structure' : 'files';
+                this.showMessage(`Uploaded ${uploadType} with ${data.files.length} files`, 'success');
+                
+                // Reorder all folders instead of reloading
+                this.reorderAllFolders();
+            } else {
+                this.showMessage(`Failed to upload: ${data.error}`, 'fail');
+            }
+        } catch (error) {
+            this.showMessage(`Error uploading: ${error.message}`, 'fail');
+        }
+    }
+
+
+    handleDownloadFolder() {
+        if (this.selectedFiles.length !== 1) {
+            this.showMessage('Please select exactly one folder to download', 'warning');
+            return;
+        }
+
+        const folderElement = this.selectedFiles[0];
         
+        // Check if selected item is actually a folder
+        if (folderElement.dataset.type !== 'folder') {
+            this.showMessage('Please select a folder to download', 'warning');
+            return;
+        }
+        
+        const folderId = folderElement.dataset.folderId;
+        
+        if (!folderId) {
+            this.showMessage('Invalid folder selected', 'error');
+            return;
+        }
+
+        // Trigger the download by redirecting to the download URL
+        window.location.href = `/zettelkasten/zettel/${folderId}/download/`;
     }
 
-    handleRename() {
+    handleSearch(folderElement, query){
+        // Get direct children only (not descendants)
+        const files = folderElement.querySelectorAll(':scope > .folder-content > .file');
+        const subFolders = folderElement.querySelectorAll(':scope > .folder-content > .folder');
 
+        let hideThisFolder = true;
+        
+        // If query is empty, show everything
+        if (query === '') {
+            hideThisFolder = false;
+        }
+
+        // Check files in this folder
+        files.forEach(file => {
+            const nameElement = file.querySelector('.folder-name p');
+            const fileName = nameElement ? nameElement.textContent.toLowerCase() : '';
+            
+            if (fileName.includes(query.toLowerCase())) {
+                file.classList.remove('file-not-found');
+                hideThisFolder = false; // If any file matches, don't hide this folder
+            } else {
+                file.classList.add('file-not-found');
+            }
+        });
+
+        // Check subfolders recursively
+        subFolders.forEach(subFolder => {
+            const nameElement = subFolder.querySelector(':scope > .folder-name p');
+            const subFolderName = nameElement ? nameElement.textContent.toLowerCase() : '';
+            
+            // Recursively search the subfolder
+            const shouldHideSubFolder = this.handleSearch(subFolder, query);
+            
+            // If subfolder name matches or subfolder contains matches, show it
+            if (subFolderName.includes(query.toLowerCase()) || !shouldHideSubFolder) {
+                subFolder.classList.remove('file-not-found');
+                hideThisFolder = false; // If any subfolder is visible, don't hide this folder
+            } else {
+                subFolder.classList.add('file-not-found');
+            }
+        });
+
+        return hideThisFolder;
+    }
+
+    async handleRename() {
+        if (this.selectedFiles.length !== 1) {
+            this.showMessage('Please select exactly one file or folder to rename', 'warning');
+            return;
+        }
+
+        //if root folder is selected, do nothing
+        if (this.selectedFiles[0].dataset.isRoot === "true") {
+            this.showMessage('Cannot rename root folder', 'warning');
+            return;
+        }
+        
+        const fileElement = this.selectedFiles[0];
+        const itemType = fileElement.dataset.type;
+        const itemId = itemType === 'folder' ? fileElement.dataset.folderId : fileElement.dataset.id;
+
+        let oldName = fileElement.querySelector('.folder-name p').textContent;
+        let extName = '';
+        if (itemType == 'file') {
+            //replace file extention
+            extName = oldName.split('.').pop();
+            oldName = oldName.split('.')[0];
+        }
+
+        let newName = prompt(`Enter new name for ${itemType}:`, oldName );
+        if (!newName) {
+            return; // User cancelled
+        }
+
+        if (itemType === 'file') {
+            // Ensure new name has proper file extension
+            newName += `.${extName}`;
+            console.log('New file name:', newName);
+        }
+        try {
+            const response = await fetch(`/zettelkasten/zettel/${itemType}/${itemId}/update_name/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': this.getCSRFToken()
+                },
+                body: JSON.stringify({ new_name: newName })
+            });
+
+            const data = await response.json();
+
+            if (data.success) { 
+                this.showMessage(`Renamed ${itemType} to: ${newName}`, 'success');
+
+                // Update the file/folder name in the DOM
+                const nameElement = fileElement.querySelector('.folder-name p');
+                if (nameElement) {
+                    nameElement.textContent = data.name;
+                }
+            }
+            else {
+                this.showMessage(`Failed to rename ${itemType}: ${data.error}`, 'fail');
+            }
+        } catch (error) {
+            this.showMessage(`Error renaming ${itemType}: ${error.message}`, 'fail');
+        }
     }
 
     async handleDelete() {
@@ -346,17 +796,21 @@ class FileManager {
             return; // User cancelled deletion
         }
         for (const file of this.selectedFiles) {
-            let path = "zettel";
+            let itemType = "zettel";
             let id = file.dataset.id;
-            if (file.classList.contains('folder')) {
+            if (file.dataset.type === 'folder') {
                 if (file.dataset.isRoot === "true") {
                     continue; // Skip deletion of root folder
                 }
-                path = "folder";
+                itemType = "folder";
                 id = file.dataset.folderId;
             }
+            else if (file.dataset.type === 'file') {
+                itemType = "file";
+                id = file.dataset.id;
+            }
             try {
-                const response = await fetch(`/zettelkasten/zettel/${id}/delete_${path}/`, {
+                const response = await fetch(`/zettelkasten/zettel/${itemType}/${id}/delete/`, {
                     method: 'DELETE',
                     headers: {
                         'X-CSRFToken': this.getCSRFToken()
@@ -383,11 +837,11 @@ class FileManager {
      */
     addNewFileToDOM(fileId, fileName) {
         //get direct children
-        const folderFiles = this.focusedFolder.querySelector(':scope > .folder-content');
+        const folderFiles = this.parentFolder.querySelector(':scope > .folder-content');
         // Create the new file element with exact same structure as template
         const fileElement = document.createElement('div');
         fileElement.className = 'file';
-        fileElement.setAttribute('data-type', 'file');
+        fileElement.setAttribute('data-type', 'zettel');
         fileElement.setAttribute('data-id', fileId);
         
         // Create file content with proper structure - newly created files are always private
@@ -411,18 +865,22 @@ class FileManager {
             // No folders, insert at the beginning
             folderFiles.prepend(fileElement);
         }
+
+        // Reorder the parent folder to maintain proper ordering
+        this.reorderFolderContents(this.parentFolder);
     }
 
     addNewFolderToDOM(folderId, folderName) {
         // Get or create the folder-children container
-        let folderChildren = this.focusedFolder.querySelector(':scope > .folder-content ');
-        
+        let folderChildren = this.parentFolder.querySelector(':scope > .folder-content ');
+
 
         // Create the new folder element with exact same structure as template
         // NOTE: New folders are created EXPANDED (no 'retracted' class)
         const folderElement = document.createElement('div');
         folderElement.className = 'folder'; // No 'retracted' class = expanded
         folderElement.setAttribute('data-folder-id', folderId);
+        folderElement.setAttribute('data-type', 'folder');
         
         // Create folder content with proper structure matching template
         folderElement.innerHTML = `
@@ -443,7 +901,8 @@ class FileManager {
         // Add the new folder to the folder-children container
         folderChildren.prepend(folderElement);
 
-
+        // Reorder the parent folder to maintain proper ordering
+        this.reorderFolderContents(this.parentFolder);
     }
 
     emit(eventName, data) {

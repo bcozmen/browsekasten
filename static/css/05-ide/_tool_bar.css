@@ -43,6 +43,7 @@
     cursor: pointer;
 }
 
+
 .tool-bar-input{
     background-color: var(--page-bg);
     border: 1.5px solid var(--border-light);
@@ -52,8 +53,18 @@
     padding: var(--spacing-1);
     margin : 0 var(--spacing-1);
 }
+
+
 .tool-bar-input::placeholder {
     color: var(--text-secondary);
+}
+
+.tool-bar-fm{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    max-width: 15px;
 }
 
 

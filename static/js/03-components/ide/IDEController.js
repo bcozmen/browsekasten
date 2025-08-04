@@ -79,19 +79,18 @@ class IDEController {
             }
             
             // Update editor with file content
-            this.updateEditor(data.content, data.title);
-            
-            // Store current file info
+            this.updateEditor(data.content, data.name);
+
+            // Store current file state
             this.currentFile = {
-                ...this.currentFile,
-                id: fileId,
-                title: data.title,
-                content: data.contentRaw
-            };
-            
-            this.showMessage(`Loaded: ${data.title}`, 'success', 2000);
-            
-        } catch (error) {
+                id: zettelId,
+                type: 'zettel',
+                name: data.name,
+                folderId: data.folder_id,
+                isPublic: data.is_public
+            }
+
+            this.showMessage(`Loaded: ${data.name}`, 'success', 2000);        } catch (error) {
             this.showMessage(`Failed to load file: ${error.message}`, 'fail', 5000);
         } 
     }

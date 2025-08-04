@@ -16,6 +16,23 @@
 </head>
 
 <body>
+    
+    <div class = "upload-form">
+        <div class = "card">
+            <div class="card-header">
+            <h2 class="card-title">Upload Files</h2>
+            <p class="card-subtitle">Please upload files or folder</p>
+            </div>
+            
+            <form id="upload-form" enctype="multipart/form-data">
+                {% csrf_token %}
+                <input type="file" name="files" id="file-input" multiple>
+                <button type="submit">Upload</button>
+            </form>
+            <div id="upload-progress"></div>
+        </div>
+    </div>
+    
     <!-- Navigation Menu -->
     <nav>
         <div class="navbar-left">
@@ -51,16 +68,17 @@
         </div>
     </nav>
 
+    
+
     <main>
         {% block content %}
         {% endblock %}
+
+        
     </main>
 
-    <footer>
-        <div class="responsive-container">
-            <p>BrowseKasten. All rights reserved.</p>
-        </div>
-    </footer>
+    
+
 
     {% block extra_js %}{% endblock %}
     <script type="module" src="{% static 'js/main.js' %}"></script>

@@ -4,7 +4,6 @@ from django.http import JsonResponse
 from .models import Zettel, Folder
 from django.views.decorators.http import require_POST
 import json
-from django.utils.text import slugify   
 from django.utils.safestring import mark_safe
 import markdown
 import re
@@ -13,54 +12,66 @@ import re
 def get_folder_tree(folder):
     return {
         'name': folder.name,
+        'id': folder.id,
         'children': [get_folder_tree(child) for child in folder.children.all()],
         'zettels': list(folder.zettels.all())
     }
+
+
 @login_required
 def editor(request):
-    root_folders = Folder.objects.filter(author=request.user, parent=None).order_by('-created')
-    root_zettels = Zettel.objects.filter(author=request.user, folder__isnull=True).order_by('-created')
-
-    childeren = [get_folder_tree(f) for f in root_folders]
-    zettels = Zettel.objects.filter(author=request.user).order_by('-created')
-
-    folder_tree = {
-        'name': 'Root',
-        'children': childeren,
-        'zettels': list(root_zettels)
-    }
+    # Get user's root folder (created automatically on registration)
+    root_folder = Folder.get_user_root(request.user)
+    
+    # Build folder tree starting from root
+    folder_tree = get_folder_tree(root_folder)
+    
     context = {
         'folder_tree': folder_tree,
     }
-    return render(request, 'zettelkasten/zettelkasten_home.html', context)
+    return render(request, 'zettelkasten/ide.html', context)
 
 
     
 @login_required
-def get(request, zettel_id):
+def get_zettel(request, zettel_id):
     zettel = get_object_or_404(Zettel, id=zettel_id, author=request.user)
     return JsonResponse({
         'success': True,
+        'zettel_id': zettel.id,
+        'is_public': zettel.is_public,
+        'path': zettel.get_path(),
+        'folder_id': zettel.folder.id if zettel.folder else None,
+        'folder_name': zettel.folder.name if zettel.folder else None,
         'title': zettel.title.replace(".md", "").replace("-", " ").replace("_", " "),
         'author': zettel.author.username,
-        'contentRaw': zettel.content,
-        'contentRendered': mark_safe(markdown.markdown(zettel.content)),
+        'content': zettel.content,
         'created': zettel.created.strftime('%Y-%m-%d %H:%M:%S'),
         'updated': zettel.updated.strftime('%Y-%m-%d %H:%M:%S'),
     })
 
 @login_required
 @require_POST
-def create(request):
+def create_zettel(request, folder_id=None):
     try:
+        # If no folder_id provided, use user's root folder
+        if folder_id is None:
+            target_folder = Folder.get_user_root(request.user)
+        else:
+            target_folder = get_object_or_404(Folder, id=folder_id, author=request.user)
+        
         title = 0
-        while Zettel.objects.filter(title="new-zettel-" + str(title) , author=request.user).exists():
+        while Zettel.objects.filter(title="new-zettel-" + str(title), author=request.user, folder=target_folder).exists():
             title += 1
         title = "new-zettel-" + str(title)
 
-        slug = slugify(title).lower()
-
-        zettel = Zettel(title=title , author=request.user, is_public = False, content = "", slug = slug)
+        zettel = Zettel(
+            title=title, 
+            author=request.user, 
+            is_public=False, 
+            content="", 
+            folder=target_folder
+        )
         zettel.save()
 
         return JsonResponse({'success': True, 'id': zettel.id, 'title': zettel.title})
@@ -69,96 +80,40 @@ def create(request):
 
 @login_required
 @require_POST
-def update(request, zettel_id):
+def create_folder(request, folder_id=None):
     try:
-        data = json.loads(request.body)
-        content = data.get('content', '').strip()
+        # If no folder_id provided, use user's root folder
+        if folder_id is None:
+            target_folder = Folder.get_user_root(request.user)
+        else:
+            target_folder = get_object_or_404(Folder, id=folder_id, author=request.user)
 
-        zettel = get_object_or_404(Zettel, id=zettel_id, author=request.user)
-        zettel.content = content
-        zettel.save()
-
-        return JsonResponse({'success': True})
-    except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)}, status=400)
-
-
-
-
-
-@login_required
-@require_POST
-def rename(request, zettel_id):
-    try:
-        data = json.loads(request.body)
-        title = data.get('title', '').strip()
-
-        if "." in title:
-            title = title.split(".")[0]
-        title = title.lower()
-
-        #check if title is already taken, if so, add a number to the end
-        if Zettel.objects.filter(title=title, author=request.user).exists():
-            
-            return JsonResponse({'success': False, 'error': "File name exists"}, status=400)
-
-        zettel = get_object_or_404(Zettel, id=zettel_id, author=request.user)
-        zettel.slug = slugify(title)
-        zettel.title = title
-        zettel.save()
-        return JsonResponse({'success': True})
-    except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)}, status=400)
-
-
-@login_required
-@require_POST
-def duplicate(request, zettel_id):
-    try:
-        zettel = get_object_or_404(Zettel, id=zettel_id, author=request.user)
-        title_base = zettel.title + "-copy"
         title = 0
-        while Zettel.objects.filter(title=title_base + "-" + str(title) , author=request.user).exists():
+        while Folder.objects.filter(name="new-folder-" + str(title), author=request.user, parent=target_folder).exists():
             title += 1
-        title = title_base + "-" + str(title) 
-        slug = slugify(title).lower()
-        new_zettel = Zettel(title=title, author=request.user, is_public = zettel.is_public, content = zettel.content, slug = slugify(title).lower())
-        new_zettel.save()
-        return JsonResponse({'success': True, 'id': new_zettel.id, 'title': new_zettel.title})
+        title = "new-folder-" + str(title)
+
+        new_folder = Folder(name=title, author=request.user, parent=target_folder)
+        new_folder.save()
+
+        return JsonResponse({'success': True, 'id': new_folder.id, 'name': new_folder.name})
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=400)
-
+    
 @login_required
-def delete(request, zettel_id):
-    if request.method != "DELETE":
-        return JsonResponse({'success': False, 'error': "Method not allowed"}, status=405)
+def delete_folder(request, folder_id):
+    try:
+        folder = get_object_or_404(Folder, id=folder_id, author=request.user)
+        folder.delete()
+        return JsonResponse({'success': True})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+    
+@login_required
+def delete_zettel(request, zettel_id):
     try:
         zettel = get_object_or_404(Zettel, id=zettel_id, author=request.user)
         zettel.delete()
         return JsonResponse({'success': True})
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=400)
-
-@login_required
-@require_POST
-def make_private(request, zettel_id):
-    zettel = get_object_or_404(Zettel, id=zettel_id, author=request.user)
-    zettel.is_public = False
-    zettel.save()
-    return JsonResponse({'success': True})
-
-@login_required
-@require_POST
-def make_public(request, zettel_id):
-    zettel = get_object_or_404(Zettel, id=zettel_id, author=request.user)
-    zettel.is_public = True
-    zettel.save()
-    return JsonResponse({'success': True})
-
-
-
-@login_required
-def get_is_public(request, zettel_id):
-    zettel = get_object_or_404(Zettel, id=zettel_id, author=request.user)
-    return JsonResponse({'success': True, 'is_public': zettel.is_public})
-

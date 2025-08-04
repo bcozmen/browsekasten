@@ -8,13 +8,13 @@
 @import url('02-components/ui/_forms.css');
 
 
-@import url('03-pages/_file_manager.css');
-@import url('03-pages/_markdown-shared.css');
-@import url('03-pages/_zettelkasten.css');
-@import url('03-pages/blog.css');
-@import url('05-editor/_codemirror.css');
-@import url('05-editor/_editor.css');
-@import url('05-editor/_markdown-preview.css');
-@import url('05-editor/_ide-components.css');
+/* @import url('03-pages/blog.css'); */  /* File doesn't exist - commented out */
+
+
+@import url('05-ide/_ide.css');
+@import url('05-ide/_file_manager.css');
+@import url('05-ide/_tool_bar.css');
+@import url('05-ide/_editor.css');
+@import url('05-ide/_codemirror.css');
 @import url('04-utilities/_responsive.css');
 

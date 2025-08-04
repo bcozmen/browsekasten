@@ -1,561 +1,487 @@
 /**
  * =====================================================================================
- * FileManager.js - Obsidian-Style File Explorer
+ * FileManager.js - Event-Driven File Manager
  * =====================================================================================
  * 
  * OVERVIEW:
- * Advanced file manager component that provides Obsidian-like file exploration
- * capabilities with sophisticated selection handling, keyboard navigation,
- * and folder management features.
- * 
- * ARCHITECTURE:
- * - Selection System: Multi-select with Ctrl+click, Shift+click, and keyboard navigation
- * - Folder Management: Collapsible folders with state persistence
- * - Event System: Comprehensive event handling for file operations
- * - Keyboard Navigation: Full keyboard support for accessibility
- * - Context Menus: Right-click operations for file/folder actions
+ * Event-driven file manager that handles folder expand/collapse functionality
+ * and file selection. Uses CustomEvent system for clean integration with other components.
  * 
  * FEATURES:
- * - Multi-selection support (Ctrl+click, Shift+click, Shift+arrow keys)
- * - Folder collapse/expand with visual indicators (▶ ▼)
- * - Keyboard navigation (arrow keys, Enter, Delete, etc.)
- * - File operations (create, delete, rename, duplicate)
- * - Folder operations (create, expand/collapse)
- * - Context menu support for right-click operations
- * - State persistence (expanded folders, selections)
- * - Visual feedback for selections and hover states
- * - Accessibility support with proper ARIA attributes
- * 
- * SELECTION BEHAVIORS:
- * - Single Click: Select single file/folder
- * - Ctrl+Click: Add/remove from selection
- * - Shift+Click: Select range from last selected to clicked
- * - Shift+Arrow Keys: Extend selection in direction
- * - Ctrl+A: Select all files in current folder
- * - Escape: Clear selection
- * 
- * KEYBOARD SHORTCUTS:
- * - ↑↓: Navigate up/down
- * - ←→: Collapse/expand folders
- * - Enter: Open selected file(s)
- * - Delete: Delete selected file(s)
- * - F2: Rename selected file
- * - Ctrl+N: Create new file
- * - Ctrl+Shift+N: Create new folder
- * - Ctrl+D: Duplicate selected file
+ * - Folder expand/collapse with "retracted" class toggle
+ * - File selection handling with multi-select support
+ * - Event-driven architecture with rich event data
+ * - Keyboard navigation and shortcuts
+ * - Toolbar actions (create, upload, download, rename, delete)
  * 
  * EVENTS EMITTED:
- * - onFileSelect: When file selection changes
- * - onFileOpen: When file is opened (double-click or Enter)
- * - onFileCreate: When new file is created
- * - onFileDelete: When file is deleted
- * - onFolderCreate: When new folder is created
- * - onFolderToggle: When folder is expanded/collapsed
+ * - 'fileSelected': When a file is opened for viewing/editing
+ * - 'fileCreate': When new file creation is requested
+ * - 'folderCreate': When new folder creation is requested  
+ * - 'fileUpload': When files are selected for upload
+ * - 'fileDownload': When selected files should be downloaded
+ * - 'itemRename': When an item should be renamed
+ * - 'itemDelete': When selected items should be deleted
  * 
  * USAGE:
  * ```javascript
- * const fileManager = new FileManager('.file-manager-container', {
- *     multiSelect: true,
- *     keyboardShortcuts: true,
- *     contextMenu: true
+ * const fileManager = new FileManager('.file-manager-container');
+ * 
+ * // Listen for events
+ * fileManager.container.addEventListener('fileSelected', (e) => {
+ *     // Handle file selection
  * });
- * 
- * // Set up event handlers
- * fileManager.onFileSelect = (selectedFiles) => console.log('Selected:', selectedFiles);
- * fileManager.onFileOpen = (file) => console.log('Opening:', file);
- * 
- * // Programmatic operations
- * fileManager.selectFile('file-id-123');
- * fileManager.expandFolder('folder-id-456');
  * ```
- * 
- * DEPENDENCIES:
- * - DOM manipulation utilities
- * - Keyboard event handling
- * - File system API integration
- * 
- * ACCESSIBILITY:
- * - Full keyboard navigation support
- * - Proper ARIA labels and roles
- * - Screen reader compatibility
- * - High contrast support
  * =====================================================================================
  */
 
 class FileManager {
-    /**
-     * CONSTRUCTOR: Initialize the File Manager
-     * 
-     * @param {string} containerSelector - CSS selector for the file manager container
-     * @param {Object} options - Configuration options
-     * @param {boolean} options.multiSelect - Enable multi-selection (default: true)
-     * @param {boolean} options.keyboardShortcuts - Enable keyboard shortcuts (default: true)
-     * @param {boolean} options.contextMenu - Enable context menu (default: true)
-     * @param {boolean} options.dragDrop - Enable drag and drop (default: false, future feature)
-     */
     constructor(containerSelector, options = {}) {
-        // DOM Reference
         this.container = document.querySelector(containerSelector);
         if (!this.container) {
             throw new Error(`File manager container not found: ${containerSelector}`);
         }
 
-        // Configuration with defaults
         this.options = {
-            multiSelect: true,
-            keyboardShortcuts: true,
-            contextMenu: true,
-            dragDrop: false, // Future feature
+            enableSelection: true,
+            enableMultiSelect: true,
             ...options
         };
 
-        // Selection State Management
-        this.selectedFiles = new Set();     // Set of selected file IDs for fast lookup
-        this.lastSelectedFile = null;       // Last clicked file for range selection
-        this.expandedFolders = new Set();   // Set of expanded folder IDs
-        this.files = new Map();             // file id -> file data mapping
-        this.folders = new Map();           // folder id -> folder data mapping
-        
-        // Event handlers - can be set by external code
-        this.onFileSelect = null;     // Called when selection changes
-        this.onFileOpen = null;       // Called when file is opened
-        this.onFileCreate = null;     // Called when new file is created
-        this.onFileDelete = null;     // Called when file is deleted
-        this.onFolderCreate = null;   // Called when new folder is created
-        this.onFolderToggle = null;   // Called when folder is expanded/collapsed
-        
-        // Initialize the file manager
+        // Store reference to IDEController if provided
+        this.ideController = options.ideController || null;
+
+        // State
+        this.selectedFiles = [];
+        this.activeFile = null;
+        this.focusedFolder = null;    // Folder where new files will be created
+
+        // Initialize
         this.init();
     }
 
+    /**
+     * Initialize file manager
+     */
     init() {
-        this.setupEventListeners();
-        this.loadInitialState();
-        this.setupKeyboardShortcuts();
-        this.setupToolbarActions();
+        try {
+            this.setupEventListeners();
+            this.setupToolbarHandlers();
+            this.setupFocusedFolder();
+        } catch (error) {
+        }
     }
 
+    /**
+     * Set up event listeners
+     */
     setupEventListeners() {
-        // Folder collapse/expand
+        // Handle file clicks for selection
         this.container.addEventListener('click', (e) => {
-            const folderName = e.target.closest('.folder-name:not(.files)');
-            if (folderName) {
-                e.stopPropagation();
-                this.toggleFolder(folderName);
-            }
-        });
-
-        // File selection
-        this.container.addEventListener('click', (e) => {
-            const fileElement = e.target.closest('.file');
-            if (fileElement) {
-                e.preventDefault();
-                e.stopPropagation();
-                this.handleFileClick(fileElement, e);
-            }
-        });
-
-        // Middle click for new tab
-        this.container.addEventListener('mousedown', (e) => {
-            if (e.button === 1) { // Middle mouse button
-                const fileElement = e.target.closest('.file');
-                if (fileElement) {
-                    e.preventDefault();
-                    this.openFileInNewTab(fileElement);
-                }
-            }
-        });
-
-        // Double click to open in current tab
-        this.container.addEventListener('dblclick', (e) => {
-            const fileElement = e.target.closest('.file');
-            if (fileElement) {
-                e.preventDefault();
-                this.openFileInCurrentTab(fileElement);
-            }
-        });
-
-        // Context menu (right click)
-        this.container.addEventListener('contextmenu', (e) => {
             const fileElement = e.target.closest('.file');
             const folderElement = e.target.closest('.folder');
-            
-            if (fileElement || folderElement) {
-                e.preventDefault();
-                this.showContextMenu(e, fileElement, folderElement);
+            const arrowElement = e.target.closest('.arrow');
+
+            if (fileElement) {
+                this.handleFileClick(e, fileElement);
             }
-        });
-    }
-
-    toggleFolder(folderElement) {
-        const folder = folderElement.closest('.folder');
-        const folderContent = folder.querySelector('.folder-content');
-        const folderName = folderElement; // folderElement is already the .folder-name
-        const folderId = this.getFolderId(folder);
-        
-        // Check if folder is currently expanded using the CSS class instead of inline style
-        const isExpanded = folderName.classList.contains('expanded');
-        
-        if (isExpanded) {
-            // Collapse
-            folderContent.style.display = 'none';
-            folderName.classList.remove('expanded');
-            this.expandedFolders.delete(folderId);
-        } else {
-            // Expand
-            folderContent.style.display = 'block';
-            folderName.classList.add('expanded');
-            this.expandedFolders.add(folderId);
-        }
-
-        this.saveState();
-    }
-
-    handleFileClick(fileElement, event) {
-        const fileId = fileElement.dataset.id;
-        
-        if (event.ctrlKey || event.metaKey) {
-            // Multi-select with Ctrl/Cmd
-            this.toggleFileSelection(fileElement);
-        } else if (event.shiftKey && this.lastSelectedFile) {
-            // Range select with Shift
-            this.selectFileRange(this.lastSelectedFile, fileElement);
-        } else {
-            // Single select
-            this.selectSingleFile(fileElement);
-        }
-
-        this.lastSelectedFile = fileElement;
-        
-        // Trigger callback
-        if (this.onFileSelect) {
-            this.onFileSelect(Array.from(this.selectedFiles), fileId);
-        }
-    }
-
-    selectSingleFile(fileElement) {
-        // Clear previous selection
-        this.clearSelection();
-        
-        // Select new file
-        fileElement.classList.add('selected');
-        this.selectedFiles.add(fileElement.dataset.id);
-    }
-
-    toggleFileSelection(fileElement) {
-        const fileId = fileElement.dataset.id;
-        
-        if (this.selectedFiles.has(fileId)) {
-            fileElement.classList.remove('selected');
-            this.selectedFiles.delete(fileId);
-        } else {
-            fileElement.classList.add('selected');
-            this.selectedFiles.add(fileId);
-        }
-    }
-
-    selectFileRange(startElement, endElement) {
-        this.clearSelection();
-        
-        const allFiles = Array.from(this.container.querySelectorAll('.file'));
-        const startIndex = allFiles.indexOf(startElement);
-        const endIndex = allFiles.indexOf(endElement);
-        
-        const start = Math.min(startIndex, endIndex);
-        const end = Math.max(startIndex, endIndex);
-        
-        for (let i = start; i <= end; i++) {
-            const file = allFiles[i];
-            file.classList.add('selected');
-            this.selectedFiles.add(file.dataset.id);
-        }
-    }
-
-    clearSelection() {
-        this.container.querySelectorAll('.file.selected').forEach(file => {
-            file.classList.remove('selected');
-        });
-        this.selectedFiles.clear();
-    }
-
-    setupKeyboardShortcuts() {
-        if (!this.options.keyboardShortcuts) return;
-
-        document.addEventListener('keydown', (e) => {
-            // Only handle shortcuts when file manager is focused
-            if (!this.container.contains(document.activeElement)) return;
-
-            switch (e.key) {
-                case 'Delete':
-                case 'Backspace':
-                    if (this.selectedFiles.size > 0) {
-                        e.preventDefault();
-                        this.deleteSelectedFiles();
-                    }
-                    break;
-                    
-                case 'Enter':
-                    if (this.selectedFiles.size === 1) {
-                        e.preventDefault();
-                        const fileId = Array.from(this.selectedFiles)[0];
-                        const fileElement = this.container.querySelector(`[data-id="${fileId}"]`);
-                        this.openFileInCurrentTab(fileElement);
-                    }
-                    break;
-                    
-                case 'F2':
-                    if (this.selectedFiles.size === 1) {
-                        e.preventDefault();
-                        this.renameSelectedFile();
-                    }
-                    break;
-                    
-                case 'ArrowUp':
-                case 'ArrowDown':
-                    e.preventDefault();
-                    this.navigateFiles(e.key === 'ArrowUp' ? -1 : 1, e.shiftKey);
-                    break;
+            else if (arrowElement && folderElement) {
+                this.toggleFolder(folderElement);
             }
-        });
-    }
-
-    setupToolbarActions() {
-        const toolbar = document.querySelector('.file-manager-bar');
-        if (!toolbar) return;
-
-        // New file button
-        const newFileBtn = toolbar.querySelector('[title="New zettel"]');
-        if (newFileBtn) {
-            newFileBtn.addEventListener('click', () => this.createNewFile());
-        }
-
-        // New folder button
-        const newFolderBtn = toolbar.querySelector('[title="New folder"]');
-        if (newFolderBtn) {
-            newFolderBtn.addEventListener('click', () => this.createNewFolder());
-        }
-
-        // Upload button
-        const uploadBtn = toolbar.querySelector('[title="Upload"]');
-        if (uploadBtn) {
-            uploadBtn.addEventListener('click', () => this.uploadFiles());
-        }
-
-        // Download button
-        const downloadBtn = toolbar.querySelector('[title="Download"]');
-        if (downloadBtn) {
-            downloadBtn.addEventListener('click', () => this.downloadSelected());
-        }
-
-        // Search button
-        const searchBtn = toolbar.querySelector('[title="Search"]');
-        if (searchBtn) {
-            searchBtn.addEventListener('click', () => this.openSearch());
-        }
-    }
-
-    // File operations
-    openFileInCurrentTab(fileElement) {
-        const fileId = fileElement.dataset.id;
-        if (this.onFileOpen) {
-            this.onFileOpen(fileId, 'current-tab');
-        }
-    }
-
-    openFileInNewTab(fileElement) {
-        const fileId = fileElement.dataset.id;
-        if (this.onFileOpen) {
-            this.onFileOpen(fileId, 'new-tab');
-        }
-    }
-
-    createNewFile() {
-        // Get current folder context
-        const selectedFolder = this.getSelectedFolderContext();
-        
-        const fileName = prompt('Enter file name:', 'Untitled');
-        if (fileName) {
-            if (this.onFileCreate) {
-                this.onFileCreate(fileName, selectedFolder);
-            }
-        }
-    }
-
-    createNewFolder() {
-        const selectedFolder = this.getSelectedFolderContext();
-        
-        const folderName = prompt('Enter folder name:', 'New Folder');
-        if (folderName) {
-            if (this.onFolderCreate) {
-                this.onFolderCreate(folderName, selectedFolder);
-            }
-        }
-    }
-
-    deleteSelectedFiles() {
-        if (this.selectedFiles.size === 0) return;
-        
-        const fileNames = Array.from(this.selectedFiles).map(id => {
-            const element = this.container.querySelector(`[data-id="${id}"]`);
-            return element?.textContent?.trim() || id;
-        });
-        
-        const message = `Delete ${fileNames.length} file(s)?\n${fileNames.join(', ')}`;
-        
-        if (confirm(message)) {
-            if (this.onFileDelete) {
-                this.onFileDelete(Array.from(this.selectedFiles));
-            }
-        }
-    }
-
-    // Utility methods
-    getFolderId(folderElement) {
-        // Extract folder ID from data attribute or path
-        return folderElement.dataset.folderId || 
-               folderElement.querySelector('.folder-name p')?.textContent?.trim() || 
-               Math.random().toString(36);
-    }
-
-    getSelectedFolderContext() {
-        // Determine which folder context we're in based on selection
-        if (this.selectedFiles.size > 0) {
-            const firstSelected = this.container.querySelector(`[data-id="${Array.from(this.selectedFiles)[0]}"]`);
-            return firstSelected?.closest('.folder');
-        }
-        return null;
-    }
-
-    navigateFiles(direction, extend = false) {
-        const allFiles = Array.from(this.container.querySelectorAll('.file'));
-        const currentIndex = this.lastSelectedFile ? 
-            allFiles.indexOf(this.lastSelectedFile) : -1;
-        
-        const newIndex = Math.max(0, Math.min(allFiles.length - 1, currentIndex + direction));
-        const newFile = allFiles[newIndex];
-        
-        if (newFile) {
-            if (extend && this.options.multiSelect) {
-                this.toggleFileSelection(newFile);
+            else if (folderElement) {
+                this.handleFolderClick(e, folderElement);
             } else {
-                this.selectSingleFile(newFile);
-            }
-            this.lastSelectedFile = newFile;
-            
-            // Scroll into view
-            newFile.scrollIntoView({ block: 'nearest' });
-        }
-    }
-
-    showContextMenu(event, fileElement, folderElement) {
-        // This will be implemented with the context menu component
-        console.log('Context menu requested', { fileElement, folderElement, event });
-    }
-
-    // State management
-    saveState() {
-        const state = {
-            expandedFolders: Array.from(this.expandedFolders),
-            selectedFiles: Array.from(this.selectedFiles)
-        };
-        localStorage.setItem('fileManager.state', JSON.stringify(state));
-    }
-
-    loadInitialState() {
-        try {
-            const savedState = localStorage.getItem('fileManager.state');
-            if (savedState) {
-                const state = JSON.parse(savedState);
-                this.expandedFolders = new Set(state.expandedFolders || []);
-                this.selectedFiles = new Set(state.selectedFiles || []);
-            }
-            
-            // Always ensure root folders are expanded
-            this.ensureRootFoldersExpanded();
-            
-            // Apply saved state to DOM
-            this.applyExpandedState();
-            this.applySelectionState();
-        } catch (error) {
-            console.warn('Failed to load file manager state:', error);
-            // Fallback: just ensure root folders are expanded
-            this.ensureRootFoldersExpanded();
-            this.applyExpandedState();
-        }
-    }
-
-    ensureRootFoldersExpanded() {
-        // Find all root folders and add them to expanded set
-        const rootFolders = this.container.querySelectorAll('.folder.root-folder');
-        rootFolders.forEach(folder => {
-            const folderId = this.getFolderId(folder);
-            this.expandedFolders.add(folderId);
-            
-            // Ensure the folder name has the expanded class
-            const folderName = folder.querySelector('.folder-name');
-            if (folderName) {
-                folderName.classList.add('expanded');
+                console.log('Clicked on unhandled element:', e.target);
             }
         });
     }
 
-    applyExpandedState() {
-        this.expandedFolders.forEach(folderId => {
-            const folder = this.container.querySelector(`[data-folder-id="${folderId}"]`);
-            if (folder) {
-                const folderContent = folder.querySelector('.folder-content');
-                const folderName = folder.querySelector('.folder-name');
+    setupFocusedFolder() {
+        // Focus on root folder at initialization
+        const rootFolder = this.container.querySelector('.folder[data-is-root="true"]') || 
+                          this.container.querySelector('.folder[data-name="root"]') ||
+                          this.container.querySelector('.folder');
+        
+        if (rootFolder) {
+            this.setFocusedFolder(rootFolder);
+        }
+    }
+
+    /**
+     * Handle file click with selection logic
+     */
+    handleFileClick(e, fileElement) {
+        e.stopPropagation();
+
+        if (e.ctrlKey) {
+            this.selectFile(fileElement);
+        } else if (e.shiftKey && this.activeFile) {
+        } else {
+            // Normal click: Single selection
+            this.clearFileSelection();
+            this.selectFile(fileElement);
+            this.activeFile = fileElement;
+            this.emit('file-manager:fileSelected', fileElement);
+        }
+
+        // Set focused folder to the parent folder of selected file
+        const parentFolder = this.getParentFolder(fileElement);
+        if (parentFolder) {
+            this.setFocusedFolder(parentFolder);
+        }
+    }
+
+    handleFolderClick(e, folderElement) {
+        if (e.ctrlKey){
+            this.selectFile(folderElement);
+        }
+    }
+    getParentFolder(fileElement) {
+        return fileElement.closest('.folder');
+    }
+
+    /**
+     * Toggle folder expand/collapse
+     */
+    toggleFolder(folderElement) {
+        const isRetracted = folderElement.classList.contains('retracted');
+        
+        if (isRetracted) {
+            // Expand folder
+            folderElement.classList.remove('retracted');
+        } else {
+            // Collapse folder
+            folderElement.classList.add('retracted');
+        }
+
+    }
+
+    selectFile(fileElement) {
+        if(fileElement.dataset.type !== 'folder') {
+
+        }
+
+        if (this.selectedFiles.includes(fileElement)) {
+            // Deselect file
+            fileElement.classList.remove('file-selected');
+            this.selectedFiles = this.selectedFiles.filter(f => f !== fileElement);
+        } else {
+            // Select file
+            fileElement.classList.add('file-selected');
+            this.selectedFiles.push(fileElement);
+        }
+        console.log('Selected files:', this.selectedFiles.map(f => {
+            if (f.dataset.id) {
+                return `file + ${f.dataset.id}`;
+            } else if (f.dataset.folderId) {
+                return `folder + ${f.dataset.folderId}`;
+            } else {
+                return 'unknown';
+            }
+        }));
+    }
+
+    clearFileSelection() {
+        this.selectedFiles.forEach(file => file.classList.remove('file-selected'));
+        this.selectedFiles = [];
+        this.activeFile = null;
+    }
+
+
+
+
+    /**
+     * Set focused folder (where new files will be created)
+     */
+    setFocusedFolder(folderElement) {
+        // Remove previous focused folder styling
+        if (this.focusedFolder) {
+            const prevFolderName = this.focusedFolder.querySelector('.folder-name');
+            if (prevFolderName) {
+                prevFolderName.classList.remove('folder-focused');
+            }
+        }
+        
+        this.focusedFolder = folderElement;
+        
+        // Add focused folder styling
+        if (folderElement) {
+            const folderName = folderElement.querySelector('.folder-name');
+            if (folderName) {
+                folderName.classList.add('folder-focused');
+            }
+        }
+    }
+
+    setupToolbarHandlers() {
+        const toolbar = this.container.querySelector('.tool-bar-container');
+        if (!toolbar) return;
+        
+        // Get all toolbar items
+        const toolbarItems = toolbar.querySelectorAll('.tool-bar-item');
+        toolbarItems.forEach((item, index) => {
+            item.addEventListener('click', (e) => {
+                e.stopPropagation();
                 
-                if (folderContent && folderName) {
-                    folderContent.style.display = 'block';
-                    folderName.classList.add('expanded');
+                // Get the action based on title attribute or index
+                const title = item.getAttribute('title');
+                const action = title?.toLowerCase().replace(/\s+/g, '_');
+                
+                
+                switch(action) {
+                    case 'new_zettel':
+                        this.handleNewFile();
+                        break;
+                    case 'new_folder':
+                        this.handleNewFolder();
+                        break;
+                    case 'upload':
+                        this.handleUpload();
+                        break;
+                    case 'download':
+                        this.handleDownload();
+                        break;
+                    case 'search':
+                        this.handleSearch();
+                        break;
+                    case 'rename':
+                        this.handleRename();
+                        break;
+                    case 'delete':
+                        this.handleDelete();
+                        break;
+                    default:
+                        console.log('Unknown toolbar action:', action);
+                }
+            });
+        });
+    }
+
+    // Toolbar action handlers
+    async handleNewFile() {
+        const folderId = this.focusedFolder.dataset.folderId;
+
+        try {
+            const response = await fetch(`/zettelkasten/zettel/${folderId}/create_zettel/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': this.getCSRFToken()
+                },
+                body: JSON.stringify({})
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                this.showMessage(`Created file: ${data.title}`, 'success');
+
+                // Create and add the new file element to the DOM
+                
+
+                this.addNewFileToDOM(data.id, data.title);
+
+            } else {
+                this.showMessage(`Failed to create file: ${data.error}`, 'error');
+            }
+        } catch (error) {
+            this.showMessage(`Error creating file: ${error.message}`, 'error');
+        }
+    }
+
+    async handleNewFolder() {
+        const folderId = this.focusedFolder.dataset.folderId;
+
+        try {
+            const response = await fetch(`/zettelkasten/zettel/${folderId}/create_folder/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': this.getCSRFToken()
+                },
+                body: JSON.stringify({})
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                this.showMessage(`Created folder: ${data.name}`, 'success');
+
+                // Create and add the new folder element to the DOM
+                this.addNewFolderToDOM(data.id, data.name);
+
+            } else {
+                this.showMessage(`Failed to create folder: ${data.error}`, 'error');
+            }
+        } catch (error) {
+            this.showMessage(`Error creating folder: ${error.message}`, 'error');   
+        }
+
+
+       
+    }
+
+    handleUpload() {
+      
+    }
+
+    handleDownload() {
+       
+    }
+
+    handleSearch() {
+        
+    }
+
+    handleRename() {
+
+    }
+
+    async handleDelete() {
+        if (this.selectedFiles.length === 0) {
+            this.showMessage('No files or folders selected for deletion', 'warning');
+            return;
+        }
+        if (!confirm('Are you sure you want to delete the selected files/folders?')) {
+            return; // User cancelled deletion
+        }
+        for (const file of this.selectedFiles) {
+            let path = "zettel";
+            let id = file.dataset.id;
+            if (file.classList.contains('folder')) {
+                if (file.dataset.isRoot === "true") {
+                    continue; // Skip deletion of root folder
+                }
+                path = "folder";
+                id = file.dataset.folderId;
+            }
+            try {
+                const response = await fetch(`/zettelkasten/zettel/${id}/delete_${path}/`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRFToken': this.getCSRFToken()
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    this.showMessage(`Deleted Files`, 'success');
+
+                    file.remove();
+                } else {
+                    this.showMessage(`Failed to delete ${path}: ${data.error}`, 'fail');
+                }
+            } catch (error) {
+                this.showMessage(`Error deleting ${path}: ${error.message}`, 'fail');
+            }
+        }
+    }
+
+    /**
+     * Add a new file element to the DOM without reloading
+     */
+    addNewFileToDOM(fileId, fileName) {
+        //get direct children
+        const folderFiles = this.focusedFolder.querySelector(':scope > .folder-content');
+        // Create the new file element with exact same structure as template
+        const fileElement = document.createElement('div');
+        fileElement.className = 'file';
+        fileElement.setAttribute('data-type', 'file');
+        fileElement.setAttribute('data-id', fileId);
+        
+        // Create file content with proper structure - newly created files are always private
+        fileElement.innerHTML = `
+            <div class="folder-name">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="folder-icon">
+                    <path fill-rule="evenodd" d="M5.625 1.5c-1.036 0-1.875.84-1.875 1.875v17.25c0 1.035.84 1.875 1.875 1.875h12.75c1.035 0 1.875-.84 1.875-1.875V12.75A3.75 3.75 0 0 0 16.5 9h-1.875a1.875 1.875 0 0 1-1.875-1.875V5.25A3.75 3.75 0 0 0 9 1.5H5.625ZM7.5 15a.75.75 0 0 1 .75-.75h7.5a.75.75 0 0 1 0 1.5h-7.5A.75.75 0 0 1 7.5 15Zm.75 2.25a.75.75 0 0 0 0 1.5H12a.75.75 0 0 0 0-1.5H8.25Z" clip-rule="evenodd" />
+                    <path d="M12.971 1.816A5.23 5.23 0 0 1 14.25 5.25v1.875c0 .207.168.375.375.375H16.5a5.23 5.23 0 0 1 3.434 1.279 9.768 9.768 0 0 0-6.963-6.963Z" />
+                </svg>
+                <p>${fileName}</p>
+            </div>
+        `;
+
+        // Find all folders inside the folderFiles container
+        const folders = folderFiles.querySelectorAll(':scope > .folder');
+        if (folders.length > 0) {
+            // Insert after the last folder
+            const lastFolder = folders[folders.length - 1];
+            lastFolder.after(fileElement);
+        } else {
+            // No folders, insert at the beginning
+            folderFiles.prepend(fileElement);
+        }
+    }
+
+    addNewFolderToDOM(folderId, folderName) {
+        // Get or create the folder-children container
+        let folderChildren = this.focusedFolder.querySelector(':scope > .folder-content ');
+        
+
+        // Create the new folder element with exact same structure as template
+        // NOTE: New folders are created EXPANDED (no 'retracted' class)
+        const folderElement = document.createElement('div');
+        folderElement.className = 'folder'; // No 'retracted' class = expanded
+        folderElement.setAttribute('data-folder-id', folderId);
+        
+        // Create folder content with proper structure matching template
+        folderElement.innerHTML = `
+            <div class="folder-name">
+                <div class="folder-toggle">
+                    <span class="arrow">▼</span>
+                    <svg class="folder-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                        <path class="folder-closed-path" d="M19.5 21a3 3 0 0 0 3-3v-4.5a3 3 0 0 0-3-3h-15a3 3 0 0 0-3 3V18a3 3 0 0 0 3 3h15ZM1.5 10.146V6a3 3 0 0 1 3-3h5.379a2.25 2.25 0 0 1 1.59.659l2.122 2.121c.14.141.331.22.53.22H19.5a3 3 0 0 1 3 3v1.146A4.483 4.483 0 0 0 19.5 9h-15a4.483 4.483 0 0 0-3 1.146Z" />
+                        <path class="folder-open-path" d="M19.906 9c.382 0 .749.057 1.094.162V9a3 3 0 0 0-3-3h-3.879a.75.75 0 0 1-.53-.22L11.47 3.66A2.25 2.25 0 0 0 9.879 3H6a3 3 0 0 0-3 3v3.162A3.756 3.756 0 0 1 4.094 9h15.812ZM4.094 10.5a2.25 2.25 0 0 0-2.227 2.568l.857 6A2.25 2.25 0 0 0 4.951 21H19.05a2.25 2.25 0 0 0 2.227-1.932l.857-6a2.25 2.25 0 0 0-2.227-2.568H4.094Z" />
+                    </svg>
+                </div>
+                <p>${folderName}</p>
+            </div>
+            <div class="folder-content">
+            </div>
+        `;
+
+        // Add the new folder to the folder-children container
+        folderChildren.prepend(folderElement);
+
+
+    }
+
+    emit(eventName, data) {
+        const event = new CustomEvent(eventName, { detail: data });
+        this.container.dispatchEvent(event);
+    }
+
+    getCSRFToken() {
+        // Use IDEController's method if available, otherwise fallback to local implementation
+        if (this.ideController && this.ideController.getCSRFToken) {
+            return this.ideController.getCSRFToken();
+        }
+        
+        // Fallback implementation if no IDEController
+        const domToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+        if (domToken) {
+            return domToken;
+        }
+        
+        let cookieValue = null;
+        const name = 'csrftoken';
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let cookie of cookies) {
+                cookie = cookie.trim();
+                if (cookie.startsWith(name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
                 }
             }
-        });
-    }
-
-    applySelectionState() {
-        this.selectedFiles.forEach(fileId => {
-            const fileElement = this.container.querySelector(`[data-id="${fileId}"]`);
-            if (fileElement) {
-                fileElement.classList.add('selected');
-            }
-        });
-    }
-
-    // Public API methods
-    refreshFiles() {
-        // Reload file tree from server
-        // Implementation depends on your API
-    }
-
-    getSelectedFiles() {
-        return Array.from(this.selectedFiles);
-    }
-
-    selectFile(fileId) {
-        const fileElement = this.container.querySelector(`[data-id="${fileId}"]`);
-        if (fileElement) {
-            this.selectSingleFile(fileElement);
         }
+        return cookieValue;
     }
 
-    expandFolder(folderId) {
-        const folder = this.container.querySelector(`[data-folder-id="${folderId}"]`);
-        if (folder) {
-            const folderName = folder.querySelector('.folder-name');
-            if (folderName && !folderName.classList.contains('expanded')) {
-                this.toggleFolder(folderName);
-            }
-        }
+    showMessage(text, type = 'info', duration = 3000) {
+        const eventData = { text, type, duration };
+        this.emit('showMessage', eventData);
     }
-
-    // Event listener setters
-    setOnFileSelect(callback) { this.onFileSelect = callback; }
-    setOnFileOpen(callback) { this.onFileOpen = callback; }
-    setOnFileCreate(callback) { this.onFileCreate = callback; }
-    setOnFileDelete(callback) { this.onFileDelete = callback; }
-    setOnFolderCreate(callback) { this.onFolderCreate = callback; }
 }
 
 // Export for use in other modules

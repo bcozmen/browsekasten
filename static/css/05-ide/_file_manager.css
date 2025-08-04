@@ -1,0 +1,141 @@
+/* File manager styles */
+.file-manager {
+    width: 100%;
+    flex: 1;
+    display: flex;
+    height: 100%;
+    overflow : auto; /* Allow scrolling if content overflows */
+}
+
+.file-manager::-webkit-scrollbar {
+    width: 6px;
+    background-color: var(--card-bg);
+}
+
+.file-manager::-webkit-scrollbar-thumb {
+    background-color: var(--color-primary-300);
+    border-radius: 4px;
+}
+
+.file-manager-content {
+    width: 100%;
+}
+
+
+/* Folder styles */
+.folder-name {
+    height: 15px;
+    display: flex;
+    flex : 1;
+    align-items: center;  
+    padding: var(--spacing-1);
+    cursor: pointer;
+    user-select: none;
+}
+
+.folder-toggle {
+    display: flex;
+    align-items: center;
+}
+
+
+
+.folder-icon {
+    width: 15px;
+    height: 15px;
+    display: flex;
+    color: var(--color-tertiary-500);
+}
+
+.folder p {
+    margin: 0;
+    padding-left: var(--spacing-2);
+    display: flex;
+    color: var(--color-tertiary-500);
+}
+
+/* Folder state management - default expanded, retracted when class added */
+.folder > .folder-content {
+    max-height: 5000px; /* Large enough to fit content */
+    opacity: 1;
+    overflow: hidden;
+    transition: max-height 0.3s ease, opacity 0.3s ease;
+}
+.folder.retracted > .folder-content {
+    max-height: 0;
+    opacity: 0;
+    transition: max-height 0.3s ease, opacity 0.3s ease;
+}
+
+/* Show open folder icon/path by default, closed when retracted */
+.folder-open-path {
+    display: block; /* Default open */
+}
+
+.folder-closed-path {
+    display: none; /* Hidden by default */
+}
+
+.folder.retracted .folder-open-path {
+    display: none; /* Hide open when retracted */
+}
+
+.folder.retracted .folder-closed-path {
+    display: block; /* Show closed when retracted */
+}
+
+
+.arrow {
+    padding-right: var(--spacing-1);
+    font-size: var(--font-size-xxs);
+    transition: transform 0.2s ease;
+}
+
+/* Arrow rotation - default expanded, rotate when retracted */
+.folder.retracted .arrow {
+    transform: rotate(-90deg); /* Default expanded state */
+    translate : -1px -1px; /* Adjust position to align with folder icon */
+}
+
+/* Folder content styling */
+.folder-content {
+    margin-left: var(--spacing-2);
+    border-left: 0.5px solid var(--border-light);
+    padding-left: var(--spacing-2);
+    margin-bottom: var(--spacing-1);
+}
+
+.folder-files {
+    display: flex;
+    flex-direction: column;
+}
+
+.file {
+    height: 15px;
+    display: flex;
+    align-items: left;
+    padding-bottom: var(--spacing-1-5);
+    cursor: pointer;
+}
+
+
+.file-selected {
+    background-color: var(--border-hard-inv);
+    border: 0.5px solid var(--border-medium);
+    border-radius: var(--radius-sm);
+}
+
+.folder-focused{
+    background-color: var(--border-medium-inv);
+    border-radius: var(--radius-sm);
+    border: 0.5px solid var(--border-light);
+}
+
+
+
+.folder-name:hover {
+    background-color: var(--border-medium-inv);
+    border-radius: var(--radius-sm);
+    border: 0.5px solid var(--border-light);
+}
+

@@ -5,33 +5,30 @@
 
 {% block content %}
 
-<div class="zettelkasten-container">
+<div class="ide-container">
     <div class="file-manager-container" >
         {% include "zettelkasten/file_manager/_file_manager_bar.html" %}
         {% include "zettelkasten/file_manager/file_manager.html" %}
     </div>
-    <div class="resizer" id="resizer1"></div>
-    <div class="editor-container" >
+    <div class="resizer" id="resizer"></div>
+
+    <div class="editor-container">
+        {% include "zettelkasten/editor/_editor_bar.html" %}
         {% include "zettelkasten/editor/editor.html" %}
     </div>
+
 </div>
 
 {% endblock %}
 
 {% block extra_js %}
 <!-- Core Dependencies -->
-<script src="{% static 'js/02-core/dom.js' %}"></script>
-<script src="{% static 'js/02-core/utils.js' %}"></script>
+<script type="module" src="{% static 'js/02-core/dom.js' %}"></script>
 <script src="{% static 'js/02-core/api.js' %}"></script>
 
 <!-- IDE System Components -->
-<script src="{% static 'js/03-components/ide/markdown-live-preview.js' %}"></script>
-<script src="{% static 'js/03-components/ide/markdown-formatter.js' %}"></script>
-<script src="{% static 'js/03-components/ide/editor-search.js' %}"></script>
 <script src="{% static 'js/03-components/ide/FileManager.js' %}"></script>
-<script src="{% static 'js/03-components/ide/TabManager.js' %}"></script>
-<script src="{% static 'js/03-components/ide/PanelResizer.js' %}"></script>
-<script src="{% static 'js/03-components/ide/EditorFactory.js' %}"></script>
+<script src="{% static 'js/03-components/ide/Resizer.js' %}"></script>
 <script src="{% static 'js/03-components/ide/IDEController.js' %}"></script>
 
 <!-- External Dependencies -->
@@ -41,8 +38,20 @@
 <!-- Initialize IDE -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize the IDE system
-    window.ide = new IDEController('.zettelkasten-container');
+    // Wait for CodeMirror editor to be initialized
+    function waitForEditor() {
+        if (window.cmEditor) {
+            // Editor is ready, initialize IDE
+            window.ideController = new IDEController();
+        } else {
+            // Editor not ready yet, wait a bit longer
+            console.log('Waiting for CodeMirror editor...');
+            setTimeout(waitForEditor, 100);
+        }
+    }
+    
+    // Start waiting for editor
+    waitForEditor();
 });
 </script>
 {% endblock %}

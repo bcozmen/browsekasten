@@ -68,7 +68,7 @@
   --text-url : var(--color-tertiary-600); /* URL text color */
   --text-url-hover: var(--color-primary-500); /* URL hover color */
 
-  --border-light: var(--color-primary-500); /* Light borders */
+  --border-light: var(--color-primary-300); /* Light borders */
   --border-medium: var(--color-primary-500);/* Medium borders */
   --border-hard: var(--color-primary-700); /* Hard borders */
 
@@ -87,11 +87,11 @@
   --editor-coral: #d17262;        /* Coral for special syntax */
   --editor-selection: var(--color-tertiary-400);
   /* === Accent Colors === */
-  --color-accent-success: #2d5a2d;   /* Success green (matches primary-500) */
-  --color-accent-warning: #b8860b;   /* Warm golden yellow */
+    --color-accent-success: #56e04a;   /* Brighter success for dark mode */
+  --color-accent-warning: #fbbf24;   /* Brighter warning for dark mode */
   --color-accent-error: #c53030;     /* Muted red for better harmony */
-  --color-accent-info: #2b6cb0;      /* Deep blue */
-  --color-accent-neutral: var(--color-secondary-700); /* Neutral gray */
+  --color-accent-info: #60a5fa;      /* Brighter info for dark mode */
+  
 
   /* === Font Families === */
   --font-family-heading: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -100,6 +100,7 @@
   --font-family-mono: 'IBM Plex Mono', 'JetBrains Mono', 'Fira Code', Consolas, monospace;
 
   /* === Font Sizes === */
+  --font-size-xxs: 0.6rem;    /* 10px */
   --font-size-xs: 0.75rem;    /* 12px */
   --font-size-sm: 0.875rem;   /* 14px */
   --font-size-base: 1rem;     /* 16px - base size */
@@ -242,11 +243,6 @@
 
 
 
-  /* === Dark Mode Accent Colors === */
-  --color-accent-success: #4ade80;   /* Brighter success for dark mode */
-  --color-accent-warning: #fbbf24;   /* Brighter warning for dark mode */
-  --color-accent-error: #f87171;     /* Brighter error for dark mode */
-  --color-accent-info: #60a5fa;      /* Brighter info for dark mode */
 
   /* === Enhanced Shadows for Dark Mode === */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);

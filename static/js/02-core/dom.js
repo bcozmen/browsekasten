@@ -3,6 +3,7 @@
 // DOM helpers, selectors, and manipulation utilities.
 // Example: export function $(selector) { return document.querySelector(selector); }
 
+import { setThemeColorMeta } from './theme-color.js';
 
 // Set data-theme attribute on <html> based on system color scheme
 function applySystemTheme() {

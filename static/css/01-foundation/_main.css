@@ -39,16 +39,10 @@ main {
     margin: 0;
     padding: 0;
     flex: 1;
-    overflow: auto;
+    overflow: hidden;
     
     display: flex;
     justify-content: center;
     align-items: center;
 }
 
-/* Zettelkasten IDE specific layout */
-body.zettelkasten-ide main {
-    /* Remove centering for IDE view - content should fill entire space */
-    justify-content: stretch;
-    align-items: stretch;
-}

@@ -1,128 +1,27 @@
-<!--
-    MODULAR ZETTELKASTEN MARKDOWN EDITOR
-    
-    This is the main editor template that combines all modular components
-    into a cohesive markdown editing experience with live preview.
-    
-    COMPONENT ARCHITECTURE:
-    - Base HTML structure (tabs, form)
-    - Toolbar component (formatting buttons)
-    - Search component (find/replace)
-    - CodeMirror editor (text editing)
-    - Live preview system (Obsidian-style)
-    - Shared CSS styling (works for both editor and blog)
-    
-    FEATURES:
-    - Obsidian-style live preview (cursor line = raw, others = rendered)
-    - Comprehensive formatting toolbar
-    - Advanced search and replace
-    - Keyboard shortcuts
-    - Responsive design
-    - Extensible component system
-    
-    USAGE:
-    This template should be included in your main page and will automatically
-    initialize all components when the DOM is loaded.
--->
-
 {% load static %}
 
-<!--
-    EDITOR SYSTEM OVERVIEW COMMENT
-    
-    This editor implements an Obsidian-style live markdown preview system using CodeMirror 5.x.
-    The key concept is that lines with the cursor show raw markdown (editable), while other 
-    lines show rendered HTML output (read-only preview).
-    
-    ARCHITECTURE:
-    1. CodeMirror Editor: Provides the core text editing functionality
-    2. MarkdownLivePreview Class: Manages the live preview rendering
-    3. Line Widgets: Overlay HTML content on top of markdown lines
-    4. CSS Classes: Control visibility and styling of raw vs rendered content
-    5. Event System: Responds to cursor movement and content changes
-    6. Modular Components: Separate files for toolbar, search, formatting, etc.
--->
-
-<!--
-    EDITOR TABS BAR
-    
-    This section creates a tab-like interface for multiple documents.
-    Currently visual only - functionality for opening/closing multiple files
-    would need to be implemented separately.
--->
-<div class="zettelkasten-editor-bar">
-    <ul class="editor-tabs">
-        <!-- Tab 1: Inactive tab with hidden close button -->
-        <li class="editor-tab" data-tab="editor">
-            <div class="editor-tab-name">Zettel0 Lelor This is a long name</div>
-            <div class="editor-tab-close" style="display: none;">
-                <!-- Close icon (X) -->
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
-                <path fill-rule="evenodd" d="M5.47 5.47a.75.75 0 0 1 1.06 0L12 10.94l5.47-5.47a.75.75 0 1 1 1.06 1.06L13.06 12l5.47 5.47a.75.75 0 1 1-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 0 1-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
-                </svg>
-            </div>
-        </li>
-        
-        <!-- Tab 2: Active tab with visible close button -->
-        <li class="editor-tab active" data-tab="editor">
-            <div class="editor-tab-name">Zettel1</div>
-            <div class="editor-tab-close">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
-                <path fill-rule="evenodd" d="M5.47 5.47a.75.75 0 0 1 1.06 0L12 10.94l5.47-5.47a.75.75 0 1 1 1.06 1.06L13.06 12l5.47 5.47a.75.75 0 1 1-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 0 1-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
-                </svg>
-            </div>
-        </li>
-        
-        <!-- Tab 3: Another inactive tab -->
-        <li class="editor-tab" data-tab="editor">
-            <div class="editor-tab-name">Zettel2 Lelor This is a long name</div>
-            <div class="editor-tab-close" style="display: none;">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
-                <path fill-rule="evenodd" d="M5.47 5.47a.75.75 0 0 1 1.06 0L12 10.94l5.47-5.47a.75.75 0 1 1 1.06 1.06L13.06 12l5.47 5.47a.75.75 0 1 1-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 0 1-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
-                </svg>
-            </div>
-        </li>
-    </ul>
+<div class="editor">
+    <div class="sub-editor">
+        <div class="tab-bar">
+            <!-- Tab bar content goes here -->
+        </div>
+        <form method="post" class="markdown-editor" id="sub-editor">
+            {% csrf_token %}
+            <textarea id="code-editor" name="content">{{ content|default:'' }}</textarea>
+        </form>
+    </div>
 </div>
 
-<!-- FORMATTING TOOLBAR COMPONENT -->
-{% include 'zettelkasten/editor/toolbar.html' %}
 
-<!--
-    MAIN EDITOR FORM
-    
-    Contains the textarea that CodeMirror will replace with the rich editor.
-    The form handles saving the markdown content back to the server.
--->
-<form method="post" style="flex: 2; display: flex; flex-direction: column; height: 100%; width: 100%;">
-    {% csrf_token %}
-    <!--
-        TEXTAREA FOR CODEMIRROR
-        
-        This textarea will be replaced by CodeMirror with a rich editing interface.
-        The name="content" ensures the form submission works correctly.
-    -->
-    <textarea id="code-editor" name="content">{{ content|default:'' }}</textarea>
-</form>
-
-<!-- SEARCH AND REPLACE TOOLBAR COMPONENT -->
-{% include 'zettelkasten/editor/search-toolbar.html' %}
-
-<!--
-    CSS INCLUDES
-    
-    Load all necessary stylesheets for the editor system.
-    Order is important for proper style cascading.
--->
 
 <!-- CodeMirror Core CSS -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
 
 <!-- Custom CodeMirror Theme -->
-<link rel="stylesheet" href="{% static 'css/03-pages/_codemirror.css' %}">
+<link rel="stylesheet" href="{% static 'css/05-ide/_codemirror.css' %}">
 
 <!-- Shared Markdown Styling (works for both editor and blog) -->
-<link rel="stylesheet" href="{% static 'css/03-pages/_markdown-shared.css' %}">
+<link rel="stylesheet" href="{% static 'css/05-ide/_markdown-preview.css' %}">
 
 <!-- CodeMirror Addon CSS -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/foldgutter.min.css">
@@ -225,15 +124,20 @@
                 
                 // SEARCH AND REPLACE (integrated with our search component)
                 "Ctrl-F": function(cm) { 
-                    document.getElementById('search-toolbar').style.display = 'flex';
+                    // Focus the find input that's already visible
                     document.getElementById('find-input').focus();
                 },
                 "Ctrl-H": function(cm) { 
-                    document.getElementById('search-toolbar').style.display = 'flex';
+                    // Focus the replace input that's already visible
                     document.getElementById('replace-input').focus();
                 },
                 "Esc": function(cm) {
-                    document.getElementById('search-toolbar').style.display = 'none';
+                    // Clear search inputs
+                    document.getElementById('find-input').value = '';
+                    document.getElementById('replace-input').value = '';
+                    if (window.searcher) {
+                        window.searcher.clearSearch();
+                    }
                 },
                 
                 // FORMATTING SHORTCUTS (integrated with our formatter component)
@@ -248,6 +152,15 @@
                         const formatter = new MarkdownFormatter(cm);
                         formatter.format('italic');
                     }
+                },
+                
+                // FILE OPERATIONS (integrated with IDE controller)
+                "Ctrl-S": function(cm) {
+                    // Save current file
+                    if (window.ideController) {
+                        window.ideController.saveFile();
+                    }
+                    return false; // Prevent browser's default save dialog
                 }
             },
             
@@ -295,8 +208,8 @@
          * Set up event listeners for the formatting toolbar buttons.
          * Uses event delegation for efficient handling.
          */
-        document.getElementById('formatting-toolbar').addEventListener('click', function(e) {
-            const button = e.target.closest('button');
+        document.querySelector('.tool-bar-container').addEventListener('click', function(e) {
+            const button = e.target.closest('.tool-bar-item');
             if (!button) return;
 
             const cmd = button.dataset.cmd;
@@ -304,18 +217,6 @@
             if (cmd) {
                 // Handle standard formatting commands
                 formatter.format(cmd);
-            } else if (button.id === 'toggle-preview') {
-                // Handle live preview toggle
-                const isEnabled = livePreview.toggle();
-                
-                // Update button appearance based on state
-                if (isEnabled) {
-                    button.style.background = 'transparent';
-                    button.title = 'Disable Live Preview';
-                } else {
-                    button.style.background = 'var(--color-primary-300)';
-                    button.title = 'Enable Live Preview';
-                }
             }
         });
 
@@ -374,10 +275,10 @@
 
         // Close search toolbar
         document.getElementById('close-search').addEventListener('click', function() {
-            document.getElementById('search-toolbar').style.display = 'none';
-            searcher.clearSearch();
+            // Clear search inputs and state
             document.getElementById('find-input').value = '';
             document.getElementById('replace-input').value = '';
+            searcher.clearSearch();
         });
 
         // Keyboard handling in search inputs
@@ -410,39 +311,8 @@
          * The editor system is now fully initialized and ready for use.
          * All components are connected and working together.
          */
-        console.log('Markdown editor system initialized successfully');
         
         // Optional: Trigger initial preview update
         livePreview.updatePreview();
     });
 </script>
-
-<!--
-    EDITOR SYSTEM NOTES:
-    
-    MODULAR ARCHITECTURE:
-    - Each major feature is in its own component file
-    - Components can be used independently in other projects
-    - Easy to maintain, test, and extend
-    
-    REUSABLE STYLING:
-    - _markdown-shared.css works for both editor preview and blog display
-    - Consistent appearance across all markdown content
-    - Easy to theme and customize
-    
-    EXTENSIBILITY:
-    - Add new formatting options by extending the formatter
-    - Add new search features by extending the searcher
-    - Add new preview modes by extending the live preview
-    
-    PERFORMANCE:
-    - Components are lazy-loaded and only initialized when needed
-    - Search highlighting uses efficient overlay system
-    - Live preview only updates changed lines
-    
-    ACCESSIBILITY:
-    - Keyboard shortcuts for all major functions
-    - Screen reader compatible
-    - High contrast support
-    - Focus management
--->

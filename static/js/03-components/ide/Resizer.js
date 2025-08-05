@@ -53,3 +53,13 @@ class Resizer {
         document.body.style.cursor = '';
     }
 }
+
+// Export for module systems
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = Resizer;
+}
+
+// Global export for browser
+if (typeof window !== 'undefined') {
+    window.Resizer = Resizer;
+}

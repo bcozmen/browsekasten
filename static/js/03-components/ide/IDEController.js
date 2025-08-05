@@ -1,19 +1,12 @@
 /**
- * IDEController - Main IDE o    initializeComponents() {
-        // Initialize file manager
-        this.fileManager = new FileManager('.file-manager-content', {
-            ideController: this  // Pass reference to IDEController
-        });
-        
-        // Initialize resizer
-        this.resizer = new Resizer('.ide-container');
-    }ator
- * Manages FileManager, Resizer and coordinates IDE functionality
+ * IDEController - Main IDE Controller
+ * Manages FileManager, Resizer, Editor and coordinates IDE functionality
  */
 class IDEController {
     constructor() {
         this.fileManager = null;
         this.resizer = null;
+        this.editor = null;
         this.currentFile = null;
         this.isInitialized = false;
         this.messageTimeout = null;
@@ -23,28 +16,68 @@ class IDEController {
 
     init() {
         try {
-            // Verify CodeMirror is available
-            if (!window.cmEditor) {
-                throw new Error('CodeMirror editor not found. Make sure editor.html is loaded first.');
-            }
-            
-            // Initialize components
+            // Initialize components in proper order
             this.initializeComponents();
             
             // Setup integrations
             this.setupEventHandlers();
             
             this.isInitialized = true;
+            console.log('IDEController initialized successfully');
         } catch (error) {
+            console.error('Failed to initialize IDEController:', error);
         }
     }
 
     initializeComponents() {
         // Initialize file manager
-        this.fileManager = new FileManager('.file-manager-container');
+        this.fileManager = new FileManager('.file-manager-container', {
+            ideController: this  // Pass reference to IDEController
+        });
         
         // Initialize resizer
         this.resizer = new Resizer('.ide-container');
+        
+        // Initialize editor
+        this.initializeEditor();
+    }
+
+    initializeEditor() {
+        // Verify Editor class is available
+        if (typeof Editor === 'undefined') {
+            console.error('Editor class not found. Make sure Editor.js is loaded.');
+            return;
+        }
+        
+        try {
+            this.editor = new Editor('code-editor', {
+                onSave: (content) => {
+                    this.handleEditorSave(content);
+                },
+                onContentChange: (content, change) => {
+                    this.handleContentChange(content, change);
+                },
+                onReady: (editor) => {
+                    console.log('Editor ready and initialized');
+                }
+            });
+        } catch (error) {
+            console.error('Failed to initialize editor:', error);
+        }
+    }
+
+    handleEditorSave(content) {
+        // Handle save request from editor
+        if (this.currentFile && this.currentFile.id) {
+            this.saveFileContent(this.currentFile.id, content);
+        } else {
+            this.showMessage('No file selected to save', 'warning', 3000);
+        }
+    }
+
+    handleContentChange(content, change) {
+        // Handle content changes (could be used for auto-save, etc.)
+        // For now, just track that content has changed
     }
 
     setupEventHandlers() {
@@ -97,26 +130,27 @@ class IDEController {
     }
 
     updateEditor(content, filename) {
-        // Check if CodeMirror editor is available
-        if (window.cmEditor) {
-            // Set the content in CodeMirror
+        // Check if editor is available
+        if (this.editor && this.editor.cmEditor) {
+            // Set the content in the editor
+            this.editor.setValue(content || '');
+            
+            // Focus the editor
+            this.editor.focus();
+            
+        } else if (window.cmEditor) {
+            // Fallback to global CodeMirror editor if available
             window.cmEditor.setValue(content || '');
-            
-            // Move cursor to start
             window.cmEditor.setCursor(0, 0);
-            
-            // Clear history to prevent undo to previous file
             window.cmEditor.clearHistory();
             
-            // Update live preview if available
             if (window.livePreview) {
                 window.livePreview.updatePreview();
             }
             
-            // Focus the editor
             window.cmEditor.focus();
-            
         } else {
+            console.warn('No editor available to update content');
         }
     }
 
@@ -128,9 +162,21 @@ class IDEController {
     saveFile(fileId, content) {
         // Use current file ID if not provided
         const targetFileId = fileId || this.currentFile?.id;
-        const targetContent = content || (window.cmEditor ? window.cmEditor.getValue() : '');
+        
+        // Get content from editor if not provided
+        let targetContent = content;
+        if (!targetContent) {
+            if (this.editor && this.editor.getValue) {
+                targetContent = this.editor.getValue();
+            } else if (window.cmEditor) {
+                targetContent = window.cmEditor.getValue();
+            } else {
+                targetContent = '';
+            }
+        }
         
         if (!targetFileId) {
+            this.showMessage('No file selected to save', 'warning', 3000);
             return;
         }
         
@@ -236,5 +282,12 @@ class IDEController {
     }
 }
 
-// Note: IDEController is initialized in ide.html template
-// Removed auto-initialization to prevent duplicate instances
+// Export for module systems
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = IDEController;
+}
+
+// Global export for browser
+if (typeof window !== 'undefined') {
+    window.IDEController = IDEController;
+}

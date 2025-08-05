@@ -29,6 +29,7 @@
 <!-- IDE System Components -->
 <script src="{% static 'js/03-components/ide/FileManager.js' %}"></script>
 <script src="{% static 'js/03-components/ide/Resizer.js' %}"></script>
+<script src="{% static 'js/03-components/ide/Editor.js' %}"></script>
 <script src="{% static 'js/03-components/ide/IDEController.js' %}"></script>
 
 <!-- External Dependencies -->
@@ -38,20 +39,35 @@
 <!-- Initialize IDE -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Wait for CodeMirror editor to be initialized
-    function waitForEditor() {
-        if (window.cmEditor) {
-            // Editor is ready, initialize IDE
+    // Wait for all required dependencies to be loaded
+    function waitForDependencies() {
+        const requiredGlobals = [
+            'CodeMirror',
+            'marked',
+            'MarkdownLivePreview',
+            'MarkdownFormatter', 
+            'EditorSearcher',
+            'Editor',
+            'FileManager',
+            'Resizer',
+            'IDEController'
+        ];
+        
+        const missingDeps = requiredGlobals.filter(dep => typeof window[dep] === 'undefined');
+        
+        if (missingDeps.length === 0) {
+            // All dependencies loaded, initialize IDE
+            console.log('All dependencies loaded, initializing IDE...');
             window.ideController = new IDEController();
         } else {
-            // Editor not ready yet, wait a bit longer
-            console.log('Waiting for CodeMirror editor...');
-            setTimeout(waitForEditor, 100);
+            // Some dependencies still loading, wait a bit longer
+            console.log('Waiting for dependencies:', missingDeps);
+            setTimeout(waitForDependencies, 100);
         }
     }
     
-    // Start waiting for editor
-    waitForEditor();
+    // Start dependency check
+    waitForDependencies();
 });
 </script>
 {% endblock %}

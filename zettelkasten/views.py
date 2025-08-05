@@ -108,6 +108,14 @@ from django.views.decorators.http import require_http_methods
 @login_required
 @require_http_methods(["DELETE"])
 def delete_item(request, item_type, item_id):
+    #check if its root folder
+    print("AA")
+    if item_type == 'folder' and item_id == Folder.get_user_root(request.user).id:
+        #delete all items, zettels and childeren folders
+        Folder.objects.filter(author=request.user).delete()
+        print("aa")
+        return JsonResponse({'success': True, 'message': 'Root folder and all its contents deleted successfully'})
+
     model_map = {
         'folder': Folder,
         'zettel': Zettel,

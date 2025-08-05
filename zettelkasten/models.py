@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from django.urls import reverse
 from django.utils import timezone
 from taggit.managers import TaggableManager
+import os
 
 class Folder(models.Model):
     name = models.CharField(max_length=250)
@@ -82,6 +83,18 @@ class File(models.Model):
         if not self.folder_id:
             self.folder = Folder.get_user_root(self.author)
         super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        # Delete the actual file from filesystem before deleting the database record
+        if self.file:
+            try:
+                if os.path.isfile(self.file.path):
+                    os.remove(self.file.path)
+            except (ValueError, OSError):
+                # Handle cases where file path is invalid or file doesn't exist
+                pass
+        # Delete the database record
+        super().delete(*args, **kwargs)
 
 class Zettel(models.Model):
     name = models.CharField(max_length=250)

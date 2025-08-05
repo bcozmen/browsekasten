@@ -858,6 +858,25 @@ class FileManager {
         // Check if activeFile or parentFolder will be deleted
         const willDeleteActiveFile = this.activeFile && this.selectedFiles.includes(this.activeFile);
         const willDeleteParentFolder = this.parentFolder && this.selectedFiles.includes(this.parentFolder);
+        
+        //check if root folder is selected
+        if (this.selectedFiles.some(file => file.dataset.isRoot === "true")) {
+            if (!confirm('You are about to delete the root folder. This will delete all files and folders inside it. Are you sure you want to continue?')) {
+                this.showMessage('Deletion cancelled', 'warning');
+                return; // User cancelled deletion
+            }
+
+
+            //if confirmed selectedFiles = all files and folders in root folder
+            this.selectedFiles = Array.from(this.rootFolder.querySelectorAll('.folder-content > .file, .folder-content > .folder'));
+            this.selectedFiles = this.selectedFiles.filter(file => file.dataset.isRoot !== "true"); // Exclude root folder itself
+            if (this.selectedFiles.length === 0) {
+                this.showMessage('No files or folders to delete in root folder', 'warning');
+                return; // Nothing to delete
+            }
+            this.showMessage('Deleting root folder and all its contents', 'warning');
+
+        }
 
         for (const file of this.selectedFiles) {
             let itemType = "zettel";

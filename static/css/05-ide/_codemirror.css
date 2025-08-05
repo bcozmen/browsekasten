@@ -7,7 +7,8 @@
     font-family: var(--font-family-mono);
     font-size: var(--font-size-base);
     line-height: var(--line-height-normal);
-
+    word-wrap: break-word;
+    white-space: pre-wrap;
 }
 
 /* Line numbers */
@@ -132,4 +133,21 @@
 .cm-s-mytheme.CodeMirror {
     scrollbar-width: thin;
     scrollbar-color: var(--color-primary-300) var(--page-bg);
+}
+
+/* Line wrapping styles */
+.cm-s-mytheme .CodeMirror-wrap {
+    word-wrap: break-word;
+    white-space: pre-wrap;
+}
+
+.cm-s-mytheme .CodeMirror-lines {
+    word-wrap: break-word;
+    white-space: pre-wrap;
+}
+
+.cm-s-mytheme .CodeMirror-line {
+    word-wrap: break-word;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
 }

@@ -14,9 +14,9 @@ class Folder(models.Model):
     updated = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ['-created']
+        ordering = ['name'] 
         indexes = [
-            models.Index(fields=['-created']),
+            models.Index(fields=['name']),
         ]
         unique_together = ('author', 'name', 'parent')
     
@@ -62,9 +62,9 @@ class File(models.Model):
     updated = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ['-created']
+        ordering = ['name']
         indexes = [
-            models.Index(fields=['-created']),
+            models.Index(fields=['name']),
         ]
         unique_together = ('author', 'folder', 'name')
 
@@ -96,9 +96,9 @@ class Zettel(models.Model):
     updated = models.DateTimeField(auto_now=True)
     
     class Meta:
-        ordering = ['-created']
+        ordering = ['name']
         indexes = [
-            models.Index(fields=['-created']),
+            models.Index(fields=['name']),
         ]
         unique_together = [
             ('author', 'folder', 'name'),  # Only need per-folder uniqueness now

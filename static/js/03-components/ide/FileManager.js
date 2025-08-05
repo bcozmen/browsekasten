@@ -20,6 +20,10 @@ class FileManager {
         this.rootFolder = this.container.querySelector('.folder[data-is-root="true"]'); // Folder where new files will be created
         this.parentFolder = this.container.querySelector('.folder[data-is-root="true"]'); // Folder where new files will be created
         this.setParentFolder(this.parentFolder);
+        
+        // Storage key for folder states
+        this.folderStateKey = 'fileManager_folderStates';
+        
         // Initialize
         this.init();
     }
@@ -31,6 +35,7 @@ class FileManager {
         try {
             this.setupEventListeners();
             this.setupToolbarHandlers();
+            this.restoreFolderStates();
         } catch (error) {
         }
     }
@@ -67,6 +72,8 @@ class FileManager {
             folderElement.classList.add('retracted');
         }
 
+        // Save the current folder states to localStorage
+        this.saveFolderStates();
     }
 
 
@@ -273,6 +280,9 @@ class FileManager {
 
         // Clear selection after move
         this.clearFileSelection();
+        
+        // Save folder states after moving items
+        this.saveFolderStates();
     }
 
     /**
@@ -387,7 +397,8 @@ class FileManager {
     selectRange(fileElement) {
         if (!this.activeFile) return;
 
-        const allFiles = Array.from(this.container.querySelectorAll('.file, .folder'));
+        // Get all visible files and folders in visual order (respecting tree structure)
+        const allFiles = this.getVisibleFilesInOrder();
         const startIndex = allFiles.indexOf(this.activeFile);
         const endIndex = allFiles.indexOf(fileElement);
 
@@ -401,6 +412,46 @@ class FileManager {
         for (let i = rangeStart; i <= rangeEnd; i++) {
             this.selectFile(allFiles[i]);
         }
+    }
+
+    /**
+     * Get all visible files and folders in the order they appear visually in the tree
+     */
+    getVisibleFilesInOrder() {
+        const visibleFiles = [];
+
+        const traverseFolder = (folderElement) => {
+            // Add the folder itself if it's not the root
+            if (!folderElement.dataset.isRoot) {
+                visibleFiles.push(folderElement);
+            }
+
+            // Only traverse children if folder is expanded (not retracted)
+            if (!folderElement.classList.contains('retracted')) {
+                const folderContent = folderElement.querySelector(':scope > .folder-content');
+                if (folderContent) {
+                    // Get direct children in document order
+                    const children = Array.from(folderContent.children);
+                    
+                    children.forEach(child => {
+                        if (child.classList.contains('folder')) {
+                            // Recursively traverse subfolders
+                            traverseFolder(child);
+                        } else if (child.classList.contains('file')) {
+                            // Add files directly
+                            visibleFiles.push(child);
+                        }
+                    });
+                }
+            }
+        };
+
+        // Start from root folder
+        if (this.rootFolder) {
+            traverseFolder(this.rootFolder);
+        }
+
+        return visibleFiles;
     }
 
 
@@ -547,6 +598,9 @@ class FileManager {
 
                 // Create and add the new folder element to the DOM
                 this.addNewFolderToDOM(data.id, data.name);
+                
+                // Save folder states after creating new folder
+                this.saveFolderStates();
 
             } else {
                 this.showMessage(`Failed to create folder: ${data.error}`, 'fail');
@@ -644,7 +698,7 @@ class FileManager {
                 this.showMessage(`Uploaded ${uploadType} with ${data.files.length} files`, 'success');
                 
                 // Reorder all folders instead of reloading
-                this.reorderAllFolders();
+                window.location.reload();
             } else {
                 this.showMessage(`Failed to upload: ${data.error}`, 'fail');
             }
@@ -795,6 +849,16 @@ class FileManager {
         if (!confirm('Are you sure you want to delete the selected files/folders?')) {
             return; // User cancelled deletion
         }
+
+        // Track items that will be deleted for cleanup
+        const itemsToDelete = [];
+        let deletedCount = 0;
+        let failedCount = 0;
+
+        // Check if activeFile or parentFolder will be deleted
+        const willDeleteActiveFile = this.activeFile && this.selectedFiles.includes(this.activeFile);
+        const willDeleteParentFolder = this.parentFolder && this.selectedFiles.includes(this.parentFolder);
+
         for (const file of this.selectedFiles) {
             let itemType = "zettel";
             let id = file.dataset.id;
@@ -809,6 +873,7 @@ class FileManager {
                 itemType = "file";
                 id = file.dataset.id;
             }
+            
             try {
                 const response = await fetch(`/zettelkasten/zettel/${itemType}/${id}/delete/`, {
                     method: 'DELETE',
@@ -820,14 +885,73 @@ class FileManager {
                 const data = await response.json();
 
                 if (data.success) {
-                    this.showMessage(`Deleted Files`, 'success');
-
-                    file.remove();
+                    itemsToDelete.push(file);
+                    deletedCount++;
                 } else {
-                    this.showMessage(`Failed to delete ${path}: ${data.error}`, 'fail');
+                    this.showMessage(`Failed to delete ${itemType}: ${data.error}`, 'fail');
+                    failedCount++;
                 }
             } catch (error) {
-                this.showMessage(`Error deleting ${path}: ${error.message}`, 'fail');
+                this.showMessage(`Error deleting ${itemType}: ${error.message}`, 'fail');
+                failedCount++;
+            }
+        }
+
+        // Remove successfully deleted items from DOM
+        itemsToDelete.forEach(file => file.remove());
+
+        // Show summary message
+        if (deletedCount > 0) {
+            const itemText = deletedCount === 1 ? 'item' : 'items';
+            if (failedCount === 0) {
+                this.showMessage(`Deleted ${deletedCount} ${itemText}`, 'success');
+            } else {
+                this.showMessage(`Deleted ${deletedCount} ${itemText}, ${failedCount} failed`, 'warning');
+            }
+        }
+
+        // Clear selectedFiles array since all selected items were processed
+        this.clearFileSelection();
+
+        // Handle activeFile cleanup
+        if (willDeleteActiveFile && itemsToDelete.includes(this.activeFile)) {
+            this.activeFile = null;
+        }
+
+        // Handle parentFolder cleanup
+        if (willDeleteParentFolder && itemsToDelete.includes(this.parentFolder)) {
+            this.findNewParentFolder();
+        }
+        
+        // Save folder states after deletion
+        this.saveFolderStates();
+    }
+
+    /**
+     * Find a new parent folder when the current one is deleted
+     */
+    findNewParentFolder() {
+        // First try to find the immediate parent of the deleted folder
+        if (this.parentFolder) {
+            const immediateParent = this.parentFolder.closest('.folder:not([data-folder-id="' + this.parentFolder.dataset.folderId + '"])');
+            if (immediateParent) {
+                this.setParentFolder(immediateParent);
+                return;
+            }
+        }
+
+        // If no immediate parent found, fall back to root folder
+        if (this.rootFolder) {
+            this.setParentFolder(this.rootFolder);
+        } else {
+            // Last resort: find any folder that exists
+            const anyFolder = this.container.querySelector('.folder');
+            if (anyFolder) {
+                this.setParentFolder(anyFolder);
+            } else {
+                // This shouldn't happen, but handle gracefully
+                this.parentFolder = null;
+                console.warn('No folders found after deletion - this should not happen');
             }
         }
     }
@@ -935,6 +1059,87 @@ class FileManager {
             }
         }
         return cookieValue;
+    }
+
+    /**
+     * Save the current state of all folders (expanded/retracted) to localStorage
+     * This method is also exposed publicly for external calls
+     */
+    saveFolderStates() {
+        try {
+            const folderStates = {};
+            const allFolders = this.container.querySelectorAll('.folder[data-folder-id]');
+            
+            allFolders.forEach(folder => {
+                const folderId = folder.dataset.folderId;
+                const isRetracted = folder.classList.contains('retracted');
+                folderStates[folderId] = isRetracted;
+            });
+            
+            localStorage.setItem(this.folderStateKey, JSON.stringify(folderStates));
+        } catch (error) {
+            console.warn('Failed to save folder states:', error);
+        }
+    }
+
+    /**
+     * Restore folder states from localStorage
+     * This method is also exposed publicly for external calls
+     */
+    restoreFolderStates() {
+        try {
+            const savedStates = localStorage.getItem(this.folderStateKey);
+            if (!savedStates) {
+                return; // No saved states found
+            }
+            
+            const folderStates = JSON.parse(savedStates);
+            const allFolders = this.container.querySelectorAll('.folder[data-folder-id]');
+            
+            allFolders.forEach(folder => {
+                const folderId = folder.dataset.folderId;
+                const shouldBeRetracted = folderStates[folderId];
+                
+                // Only update if we have a saved state for this folder
+                if (shouldBeRetracted !== undefined) {
+                    if (shouldBeRetracted) {
+                        folder.classList.add('retracted');
+                    } else {
+                        folder.classList.remove('retracted');
+                    }
+                }
+            });
+        } catch (error) {
+            console.warn('Failed to restore folder states:', error);
+        }
+    }
+
+    /**
+     * Clear saved folder states from localStorage
+     */
+    clearFolderStates() {
+        try {
+            localStorage.removeItem(this.folderStateKey);
+        } catch (error) {
+            console.warn('Failed to clear folder states:', error);
+        }
+    }
+
+    /**
+     * Get the current folder states as an object
+     * @returns {Object} Object mapping folder IDs to their retracted state
+     */
+    getCurrentFolderStates() {
+        const folderStates = {};
+        const allFolders = this.container.querySelectorAll('.folder[data-folder-id]');
+        
+        allFolders.forEach(folder => {
+            const folderId = folder.dataset.folderId;
+            const isRetracted = folder.classList.contains('retracted');
+            folderStates[folderId] = isRetracted;
+        });
+        
+        return folderStates;
     }
 
     showMessage(text, type = 'info', duration = 3000) {

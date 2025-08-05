@@ -432,3 +432,19 @@ def create_zip(folder):
     
     zip_buffer.seek(0)
     return zip_buffer
+
+@login_required
+@require_http_methods(["POST"])
+def update_zettel(request, zettel_id):
+    """Update the content of a zettel"""
+    zettel = get_object_or_404(Zettel, id=zettel_id, author=request.user)
+    data = json.loads(request.body)
+    new_content = data.get('content')
+
+    if not new_content:
+        return JsonResponse({'success': False, 'error': 'Content is required'}, status=400)
+
+    zettel.content = new_content
+    zettel.save()
+
+    return JsonResponse({'success': True, 'message': 'Zettel updated successfully'})    

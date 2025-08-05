@@ -5,6 +5,7 @@ html, body, main{
     font-family: var(--font-family);
     text-shadow: var(--text-shadow-base);
     text-decoration: none;
+    
 }
 
 
@@ -44,5 +45,8 @@ main {
     display: flex;
     justify-content: center;
     align-items: center;
+
+    width: 100%;
+
 }
 

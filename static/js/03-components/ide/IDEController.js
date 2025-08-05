@@ -83,14 +83,15 @@ class IDEController {
 
             // Store current file state
             this.currentFile = {
-                id: zettelId,
+                id: fileId,
                 type: 'zettel',
                 name: data.name,
                 folderId: data.folder_id,
                 isPublic: data.is_public
             }
 
-            this.showMessage(`Loaded: ${data.name}`, 'success', 2000);        } catch (error) {
+            this.showMessage(`Loaded: ${data.name}`, 'success', 2000);        
+        } catch (error) {
             this.showMessage(`Failed to load file: ${error.message}`, 'fail', 5000);
         } 
     }
@@ -140,7 +141,7 @@ class IDEController {
         try {
             
             // Save content to server using the existing API
-            const response = await fetch(`/zettelkasten/zettel/${fileId}/update/`, {
+            const response = await fetch(`/zettelkasten/zettel/${fileId}/update_zettel/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

@@ -15,4 +15,5 @@ urlpatterns = [
     path('zettel/<int:folder_id>/download/', views.download, name='download'),
     path('zettel/<int:zettel_id>/get_zettel/', views.get_zettel, name='get'),
 
+    path('zettel/<int:zettel_id>/update_zettel/', views.update_zettel, name='update'),
 ]   

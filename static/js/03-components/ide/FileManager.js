@@ -868,7 +868,7 @@ class FileManager {
 
 
             //if confirmed selectedFiles = all files and folders in root folder
-            this.selectedFiles = Array.from(this.rootFolder.querySelectorAll('.folder-content > .file, .folder-content > .folder'));
+            this.selectedFiles = Array.from(this.rootFolder.querySelectorAll(':scope > .folder-content > .file, :scope > .folder-content > .folder'));
             this.selectedFiles = this.selectedFiles.filter(file => file.dataset.isRoot !== "true"); // Exclude root folder itself
             if (this.selectedFiles.length === 0) {
                 this.showMessage('No files or folders to delete in root folder', 'warning');

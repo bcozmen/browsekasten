@@ -90,10 +90,11 @@
  * - Various markdown element classes (h1, h2, p, ul, etc.)
  * 
  * PERFORMANCE CONSIDERATIONS:
- * - Updates are debounced to prevent excessive re-rendering
+ * - Updates are optimized to only process changed lines
  * - Only visible lines are processed for better performance
  * - Widget recycling to minimize DOM manipulation
  * - Selective updates based on changed content
+ * - Full preview updates only when necessary (line additions/deletions)
  * 
  * DEPENDENCIES:
  * - CodeMirror editor instance
@@ -198,8 +199,8 @@ class MarkdownLivePreview {
             if (this.enabled) this.updateCursorLine();
         });
 
-        this.editor.on('change', () => {
-            if (this.enabled) this.updatePreview();
+        this.editor.on('change', (cm, change) => {
+            if (this.enabled) this.updateChangedLines(change);
         });
 
         this.editor.on('refresh', () => {
@@ -226,15 +227,51 @@ class MarkdownLivePreview {
     }
 
     /**
-     * Update the entire preview
+     * Update only the lines that were changed
+     * @param {Object} change - CodeMirror change object
+     */
+    updateChangedLines(change) {
+        // Get the range of affected lines
+        const fromLine = change.from.line;
+        const toLine = change.to.line;
+        const linesAdded = change.text.length - 1;
+        const linesRemoved = toLine - fromLine;
+        
+        // If lines were added or removed, we need to update line numbers
+        if (linesAdded !== linesRemoved) {
+            // For simplicity, do a full update when lines are added/removed
+            // This is still more efficient than the original approach for most edits
+            this.updatePreview();
+            return;
+        }
+        
+        // Update only the affected lines
+        const endLine = fromLine + Math.max(linesAdded, 1);
+        for (let i = fromLine; i < endLine; i++) {
+            const isCurrentLine = i === this.currentCursorLine;
+            this.renderLine(i, isCurrentLine);
+        }
+    }
+
+    /**
+     * Update the entire preview (used for initialization and major changes)
      */
     updatePreview() {
+        this.currentCursorLine = this.editor.getCursor().line;
         const lineCount = this.editor.lineCount();
         
         for (let i = 0; i < lineCount; i++) {
             const isCurrentLine = i === this.currentCursorLine;
             this.renderLine(i, isCurrentLine);
         }
+    }
+
+    /**
+     * Update only the current line (most efficient for single-line edits)
+     */
+    updateCurrentLine() {
+        const currentLine = this.editor.getCursor().line;
+        this.renderLine(currentLine, true);
     }
 
     /**
@@ -250,9 +287,13 @@ class MarkdownLivePreview {
 
         const lineText = this.editor.getLine(lineNumber);
         
-        // Clear existing widgets
+        // Clear existing widgets and markers
         if (lineHandle.widgets) {
             lineHandle.widgets.forEach(widget => widget.clear());
+        }
+        if (this.renderedLines.has(lineNumber)) {
+            this.renderedLines.get(lineNumber).clear();
+            this.renderedLines.delete(lineNumber);
         }
 
         // Show raw markdown for current line or empty lines
@@ -351,32 +392,39 @@ class MarkdownLivePreview {
     }
 
     /**
-     * Create a widget overlay for a line
+     * Replace line content with rendered HTML (single line display)
      * @param {number} lineNumber - Line number
      * @param {string} renderedContent - HTML content
      */
     createLineWidget(lineNumber, renderedContent) {
-        const widget = document.createElement('div');
+        // Clear any existing markers on this line
+        if (this.renderedLines.has(lineNumber)) {
+            this.renderedLines.get(lineNumber).clear();
+        }
+        
+        const lineText = this.editor.getLine(lineNumber);
+        const from = { line: lineNumber, ch: 0 };
+        const to = { line: lineNumber, ch: lineText.length };
+        
+        // Create replacement element
+        const widget = document.createElement('span');
         widget.className = this.widgetClass;
         widget.innerHTML = renderedContent;
-        
-        // Apply styling using CSS custom properties
         widget.style.cssText = `
             font-family: var(--font-family-body, inherit);
             line-height: var(--line-height-relaxed, 1.6);
             color: var(--text-primary, inherit);
-            margin: 0;
-            padding: 2px 0;
-            background: transparent;
         `;
-
-        this.editor.addLineClass(lineNumber, 'text', 'hidden-line');
         
-        this.editor.addLineWidget(lineNumber, widget, {
-            coverGutter: false,
-            noHScroll: true,
-            above: false
+        // Replace the entire line content with rendered HTML
+        const marker = this.editor.markText(from, to, {
+            replacedWith: widget,
+            clearOnEnter: false,
+            handleMouseEvents: true
         });
+        
+        // Store marker for cleanup
+        this.renderedLines.set(lineNumber, marker);
     }
 
     /**

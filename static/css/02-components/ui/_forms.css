@@ -74,6 +74,6 @@
 
    background-color: var(--color-tertiary-700);
     border-radius: var(--radius-base);
-display : none; /* Hidden by default */
+    display : none; /* Hidden by default */
 }
 

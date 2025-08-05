@@ -240,6 +240,18 @@
     padding-left: var(--spacing-sm);
 }
 
+/* Hide raw markdown text when showing rendered widgets */
+.cm-s-mytheme .hidden-line {
+    color: transparent;
+    user-select: none;
+}
+
+/* Widget container for rendered HTML overlays */
+.markdown-line-widget {
+    position: relative;
+    z-index: 1;
+}
+
 /* Smooth transitions for live preview */
 .cm-s-mytheme .CodeMirror-line {
     transition: all 0.2s ease;

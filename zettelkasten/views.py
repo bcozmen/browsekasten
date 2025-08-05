@@ -179,9 +179,6 @@ def upload(request):
         file_paths = request.POST.getlist('file_paths')
         has_folder_structure = request.POST.get('has_folder_structure', 'false').lower() == 'true'
         
-        print(f"DEBUG: files count: {len(files)}")
-        print(f"DEBUG: file_paths: {file_paths}")
-        print(f"DEBUG: has_folder_structure: {has_folder_structure}")
         
         if len(files) != len(file_paths):
             return JsonResponse({'success': False, 'error': 'Files and paths count mismatch'}, status=400)
@@ -232,10 +229,8 @@ def build_file_tree(files, paths):
             'file': file,
             'is_file': True,
         }
-    print("AAAAAAAAAA")
-    print(tree)
-    print_file_tree(tree)  # Debugging output
-    return tree
+    if len(tree.keys()) == 1 and "root" in tree.keys():
+        return tree["root"]
 
 @login_required
 def create_file_tree(request, tree, node):

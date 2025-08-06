@@ -113,7 +113,6 @@ def delete_item(request, item_type, item_id):
     if item_type == 'folder' and item_id == Folder.get_user_root(request.user).id:
         #delete all items, zettels and childeren folders
         Folder.objects.filter(author=request.user).delete()
-        print("aa")
         return JsonResponse({'success': True, 'message': 'Root folder and all its contents deleted successfully'})
 
     model_map = {

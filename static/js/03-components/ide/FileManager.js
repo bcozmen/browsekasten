@@ -1048,10 +1048,7 @@ class FileManager {
         this.reorderFolderContents(this.parentFolder);
     }
 
-    emit(eventName, data) {
-        const event = new CustomEvent(eventName, { detail: data });
-        this.container.dispatchEvent(event);
-    }
+    
 
     getCSRFToken() {
         // Use IDEController's method if available, otherwise fallback to local implementation
@@ -1164,6 +1161,11 @@ class FileManager {
     showMessage(text, type = 'info', duration = 3000) {
         const eventData = { text, type, duration };
         this.emit('showMessage', eventData);
+    }
+
+    emit(eventName, data) {
+        const event = new CustomEvent(eventName, { detail: data });
+        this.container.dispatchEvent(event);
     }
 }
 

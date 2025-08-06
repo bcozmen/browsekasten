@@ -60,7 +60,6 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (missingDeps.length === 0) {
             // All dependencies loaded, initialize IDE
-            console.log('All dependencies loaded, initializing IDE...');
             window.ideController = new IDEController();
         } else {
             // Some dependencies still loading, wait a bit longer

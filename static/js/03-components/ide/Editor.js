@@ -189,36 +189,33 @@ class Editor {
         if (window.MarkdownLivePreview) {
             try {
                 this.livePreview = new MarkdownLivePreview(this.cmEditor, this.options.livePreview);
-                console.log('MarkdownLivePreview initialized');
             } catch (error) {
-                console.warn('Failed to initialize MarkdownLivePreview:', error);
+                this.showMessage('Failed to initialize MarkdownLivePreview', 'warning');
             }
         } else {
-            console.warn('MarkdownLivePreview not available');
+            this.showMessage('MarkdownLivePreview not available', 'warning');
         }
 
         // Initialize formatting system
         if (window.MarkdownFormatter) {
             try {
                 this.formatter = new MarkdownFormatter(this.cmEditor);
-                console.log('MarkdownFormatter initialized');
             } catch (error) {
-                console.warn('Failed to initialize MarkdownFormatter:', error);
+                this.showMessage('Failed to initialize MarkdownFormatter', 'warning');
             }
         } else {
-            console.warn('MarkdownFormatter not available');
+            this.showMessage('MarkdownFormatter not available', 'warning');
         }
 
         // Initialize search system
         if (window.EditorSearcher) {
             try {
                 this.searcher = new EditorSearcher(this.cmEditor, this.options.search);
-                console.log('EditorSearcher initialized');
             } catch (error) {
-                console.warn('Failed to initialize EditorSearcher:', error);
+                this.showMessage('Failed to initialize EditorSearcher', 'warning');
             }
         } else {
-            console.warn('EditorSearcher not available');
+            this.showMessage('EditorSearcher not available', 'warning');
         }
     }
 
@@ -251,18 +248,18 @@ class Editor {
      * TOOLBAR EVENT HANDLING: Set up formatting toolbar
      */
     setupToolbarEvents() {
-        const toolbarContainer = document.querySelector('.tool-bar-container');
+        // Target specifically the editor's toolbar, not the file manager's toolbar
+        const toolbarContainer = document.querySelector('.editor-container .tool-bar-container');
         if (!toolbarContainer) {
-            console.warn('Toolbar container not found');
+            this.showMessage('Editor toolbar container not found', 'warning');
             return;
         }
         
         if (!this.formatter) {
-            console.warn('Formatter not available for toolbar events');
+            this.showMessage('Formatter not available for toolbar events', 'warning');
             return;
         }
 
-        console.log('Setting up toolbar events');
 
         toolbarContainer.addEventListener('click', (e) => {
             const button = e.target.closest('.tool-bar-item[data-cmd]');
@@ -304,14 +301,13 @@ class Editor {
      */
     setupSearchEvents() {
         if (!this.searcher) {
-            console.warn('Searcher not available for search events');
+            this.showMessage('EditorSearcher not available for search events', 'warning');
             return;
         }
 
-        console.log('Setting up search events');
 
         // Find input - real-time search
-        const findInput = document.getElementById('find-input');
+        const findInput = document.getElementById('editor-find-input');
         if (findInput) {
             console.log('Setting up find input events');
             findInput.addEventListener('input', (e) => {
@@ -334,11 +330,11 @@ class Editor {
                 }
             });
         } else {
-            console.warn('Find input not found');
+            this.showMessage('Editor find input not found', 'warning');
         }
 
         // Replace input
-        const replaceInput = document.getElementById('replace-input');
+        const replaceInput = document.getElementById('editor-replace-input');
         if (replaceInput) {
             console.log('Setting up replace input events');
             replaceInput.addEventListener('keydown', (e) => {
@@ -563,11 +559,6 @@ class Editor {
      * @param {string} type - Message type (success, fail, info, warning)
      * @param {number} duration - Duration in milliseconds
      */
-    showMessage(text, type = 'info', duration = 2000) {
-        if (window.ideController && window.ideController.showMessage) {
-            window.ideController.showMessage(text, type, duration);
-        }
-    }
 
     /**
      * Toggle live preview on/off
@@ -638,6 +629,16 @@ class Editor {
         this.searcher = null;
         
         this.isInitialized = false;
+    }
+
+    showMessage(text, type = 'info', duration = 3000) {
+        const eventData = { text, type, duration };
+        this.emit('showMessage', eventData);
+    }
+
+    emit(eventName, data) {
+        const event = new CustomEvent(eventName, { detail: data });
+        this.container.dispatchEvent(event);
     }
 }
 

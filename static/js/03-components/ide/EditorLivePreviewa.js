@@ -1,115 +1,4 @@
-/**
- * =====================================================================================
- * MarkdownLivePreview.js - Obsidian-Style Live Preview System
- * =====================================================================================
- * 
- * OVERVIEW:
- * Advanced live preview system that provides Obsidian-style markdown rendering
- * where the cursor line shows raw markdown while other lines display rendered HTML.
- * This creates a seamless editing experience that combines raw editing with
- * immediate visual feedback.
- * 
- * ARCHITECTURE:
- * - Line Widget System: Uses CodeMirror line widgets to overlay HTML content
- * - Cursor Tracking: Monitors cursor position to determine which line is active
- * - Markdown Parsing: Real-time markdown to HTML conversion using marked.js
- * - Event Coordination: Responds to editor changes, cursor movement, and scroll
- * - Performance Optimization: Debounced rendering and selective updates
- * 
- * HOW IT WORKS:
- * 1. Monitor cursor position and content changes in CodeMirror
- * 2. Parse markdown content to HTML using marked.js
- * 3. Create line widgets for non-cursor lines with rendered HTML
- * 4. Hide raw markdown text for lines with widgets
- * 5. Show raw markdown for the cursor line for editing
- * 6. Update widgets when content or cursor position changes
- * 
- * FEATURES:
- * - Real-time markdown rendering as you type
- * - Cursor line shows raw markdown for editing
- * - All other lines show rendered HTML preview
- * - Support for all markdown features (headers, lists, links, images, etc.)
- * - Code syntax highlighting in preview
- * - MathJax integration for mathematical expressions
- * - Custom CSS styling for rendered content
- * - Performance optimized with debounced updates
- * - Toggle on/off functionality
- * 
- * RENDERING FEATURES:
- * - Headers (H1-H6) with proper styling
- * - Bold, italic, strikethrough text formatting
- * - Unordered and ordered lists with proper indentation
- * - Code blocks with syntax highlighting
- * - Inline code with highlighting
- * - Links with hover states and click handling
- * - Images with proper sizing and alt text
- * - Blockquotes with styling
- * - Tables with formatting
- * - Horizontal rules
- * - Task lists (checkboxes)
- * 
- * USAGE:
- * ```javascript
- * // Initialize with CodeMirror editor
- * const livePreview = new MarkdownLivePreview(cmEditor, {
- *     enabled: true,
- *     widgetClass: 'markdown-line-widget markdown',
- *     debounceDelay: 100,
- *     mathJax: true
- * });
- * 
- * // Toggle preview on/off
- * const isEnabled = livePreview.toggle();
- * 
- * // Force update preview
- * livePreview.updatePreview();
- * 
- * // Clean up when done
- * livePreview.destroy();
- * ```
- * 
- * CONFIGURATION OPTIONS:
- * - enabled: Whether preview is initially enabled (default: true)
- * - widgetClass: CSS classes for widget elements (default: 'markdown-line-widget')
- * - debounceDelay: Delay before updating after changes (default: 100ms)
- * - mathJax: Enable MathJax integration (default: false)
- * - linkHandling: Handle link clicks (default: false)
- * - imageLoading: Enable image loading (default: true)
- * 
- * EVENTS EMITTED:
- * - onPreviewUpdate: When preview is updated
- * - onToggle: When preview is toggled on/off
- * - onWidgetCreate: When line widget is created
- * - onWidgetDestroy: When line widget is destroyed
- * 
- * CSS STYLING:
- * The component relies on CSS classes for styling:
- * - .markdown-line-widget: Base widget styling
- * - .markdown: Markdown content styling
- * - .cm-line-hidden: Hidden line styling
- * - Various markdown element classes (h1, h2, p, ul, etc.)
- * 
- * PERFORMANCE CONSIDERATIONS:
- * - Updates are optimized to only process changed lines
- * - Only visible lines are processed for better performance
- * - Widget recycling to minimize DOM manipulation
- * - Selective updates based on changed content
- * - Full preview updates only when necessary (line additions/deletions)
- * 
- * DEPENDENCIES:
- * - CodeMirror editor instance
- * - marked.js for markdown parsing
- * - highlight.js for code syntax highlighting (optional)
- * - MathJax for mathematical expressions (optional)
- * 
- * COMPATIBILITY:
- * - Works with CodeMirror 5.x and 6.x
- * - Compatible with all major browsers
- * - Mobile-friendly touch interfaces
- * - Screen reader accessible
- * =====================================================================================
- */
-class MarkdownLivePreview {
+class EditorLivePreview {
     /**
      * CONSTRUCTOR: Initialize the live preview system
      * 
@@ -126,6 +15,7 @@ class MarkdownLivePreview {
         this.enabled = options.enabled !== false;
         this.widgetClass = options.widgetClass || 'markdown-line-widget markdown';
         
+        console.log('EditorLivePreview initialized with options:', options);
         // Configure markdown parser
         this.markdownOptions = {
             breaks: true,
@@ -138,9 +28,92 @@ class MarkdownLivePreview {
             marked.setOptions(this.markdownOptions);
         }
 
-        this.setupEventListeners();
-        if (this.enabled) {
-            this.updatePreview();
+        //this.setupEventListeners();
+        //if (this.enabled) {
+            //this.updatePreview();
+        //}
+    }
+
+    initPreview() {
+        // Check if marked is available
+        if (typeof marked === 'undefined') {
+            console.error('Marked library not available');
+            return;
+        }
+    
+        // Get the entire editor content
+        const content = this.editor.getValue();
+        
+        // Convert entire document to HTML using marked
+        const fullHtml = marked.parse(content, this.markdownOptions);
+        
+        // Clear any existing rendering
+        this.clearAllRendering();
+        
+        // Parse the HTML and map it back to editor lines
+        this.renderFullDocument(content, fullHtml);
+    
+    }
+    
+    /**
+     * Render the full document HTML by mapping it back to editor lines
+     * @param {string} originalText - Original markdown text
+     * @param {string} html - Full rendered HTML
+     */
+    renderFullDocument(originalText, html) {
+        // Split original text into lines
+        const lines = originalText.split('\n');
+        this.currentCursorLine = this.editor.getCursor().line;
+        
+        // Create a temporary div to parse the HTML
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = html;
+        
+        // For now, we'll process line by line and try to match HTML elements
+        // This is where you'll implement your full document -> line mapping logic
+        for (let i = 0; i < lines.length; i++) {
+            const lineText = lines[i];
+            const isCurrentLine = i === this.currentCursorLine;
+            
+            if (isCurrentLine || !lineText.trim()) {
+                // Show raw markdown for current line or empty lines
+                this.editor.removeLineClass(i, 'wrap', 'markdown-rendered');
+                this.editor.removeLineClass(i, 'text', 'hidden-line');
+                this.editor.addLineClass(i, 'wrap', 'markdown-editing');
+            } else {
+                // For non-current lines, we need to extract the corresponding HTML
+                // This is where your mapping logic will go
+                const htmlForLine = this.extractHtmlForLine(lineText, tempDiv, i);
+                
+                if (htmlForLine && htmlForLine !== lineText) {
+                    this.editor.removeLineClass(i, 'wrap', 'markdown-editing');
+                    this.editor.addLineClass(i, 'wrap', 'markdown-rendered');
+                    this.createLineWidget(i, htmlForLine);
+                }
+            }
+        }
+    }
+    
+    /**
+     * Extract HTML content that corresponds to a specific markdown line
+     * @param {string} lineText - Original markdown line text
+     * @param {HTMLElement} htmlContainer - Container with full rendered HTML
+     * @param {number} lineNumber - Line number in editor
+     * @returns {string} - HTML content for this line
+     */
+    extractHtmlForLine(lineText, htmlContainer, lineNumber) {
+        // Placeholder implementation - you'll customize this logic
+        // For now, just return the line processed with your existing logic
+        return this.renderMarkdownLine(lineText);
+    }
+
+    updatePreview() {
+        this.currentCursorLine = this.editor.getCursor().line;
+        const lineCount = this.editor.lineCount();
+        
+        for (let i = 0; i < lineCount; i++) {
+            const isCurrentLine = i === this.currentCursorLine;
+            this.renderLine(i, isCurrentLine);
         }
     }
 
@@ -256,15 +229,7 @@ class MarkdownLivePreview {
     /**
      * Update the entire preview (used for initialization and major changes)
      */
-    updatePreview() {
-        this.currentCursorLine = this.editor.getCursor().line;
-        const lineCount = this.editor.lineCount();
-        
-        for (let i = 0; i < lineCount; i++) {
-            const isCurrentLine = i === this.currentCursorLine;
-            this.renderLine(i, isCurrentLine);
-        }
-    }
+    
 
     /**
      * Update only the current line (most efficient for single-line edits)
@@ -410,12 +375,7 @@ class MarkdownLivePreview {
         const widget = document.createElement('span');
         widget.className = this.widgetClass;
         widget.innerHTML = renderedContent;
-        widget.style.cssText = `
-            font-family: var(--font-family-body, inherit);
-            line-height: var(--line-height-relaxed, 1.6);
-            color: var(--text-primary, inherit);
-        `;
-        
+
         // Replace the entire line content with rendered HTML
         const marker = this.editor.markText(from, to, {
             replacedWith: widget,
@@ -440,10 +400,10 @@ class MarkdownLivePreview {
 
 // Export for module systems
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = MarkdownLivePreview;
+    module.exports = EditorLivePreview;
 }
 
 // Global export for browser
 if (typeof window !== 'undefined') {
-    window.MarkdownLivePreview = MarkdownLivePreview;
+    window.EditorLivePreview = EditorLivePreview;
 }

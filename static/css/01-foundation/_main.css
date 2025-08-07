@@ -28,7 +28,7 @@ body {
 nav, footer{
     display: flex;
     width: 100%;
-    height: 75px;
+    height: var(--nav-height);
     flex-shrink: 0;
     
     background-color: var(--navbar-bg);

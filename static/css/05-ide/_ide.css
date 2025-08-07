@@ -26,6 +26,9 @@
 .editor-container {
     flex: 1;
     height: 100%;
-    overflow: hidden;
+    max-width: 100vw ;
+    overflow: none;
 }
+
+
 

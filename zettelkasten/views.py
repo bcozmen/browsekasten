@@ -443,9 +443,6 @@ def update_zettel(request, zettel_id):
     data = json.loads(request.body)
     new_content = data.get('content')
 
-    if not new_content:
-        return JsonResponse({'success': False, 'error': 'Content is required'}, status=400)
-
     zettel.content = new_content
     zettel.save()
 

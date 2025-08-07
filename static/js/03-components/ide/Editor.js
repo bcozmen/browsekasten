@@ -1,39 +1,3 @@
-/**
- * =====================================================================================
- * Editor.js - Main CodeMirror Editor Controller
- * =====================================================================================
- * 
- * OVERVIEW:
- * Manages the complete CodeMirror editor system including initialization,
- * component integration, and event handling. This class encapsulates all
- * editor functionality that was previously in editor.html.
- * 
- * FEATURES:
- * - CodeMirror editor initialization with optimal markdown configuration
- * - Integration with MarkdownLivePreview for Obsidian-style editing
- * - MarkdownFormatter for text formatting (bold, italic, etc.)
- * - EditorSearcher for find/replace functionality
- * - Toolbar event handling for formatting buttons
- * - Search toolbar event handling
- * - Keyboard shortcuts integration
- * - Auto-save and content management
- * 
- * ARCHITECTURE:
- * - Modular component integration
- * - Event-driven architecture
- * - Clean separation of concerns
- * - Extensible configuration system
- * 
- * USAGE:
- * ```javascript
- * const editor = new Editor('code-editor', {
- *     content: 'Initial content',
- *     theme: 'mytheme',
- *     autosave: true
- * });
- * ```
- */
-
 class Editor {
     /**
      * CONSTRUCTOR: Initialize the editor system
@@ -45,8 +9,8 @@ class Editor {
         this.textareaId = textareaId;
         this.options = {
             // CodeMirror configuration
-            mode: 'markdown',
-            theme: 'mytheme',
+            mode: '',
+            theme: '',
             lineNumbers: true,
             lineWrapping: true,
             styleActiveLine: true,
@@ -60,7 +24,6 @@ class Editor {
             // Component configuration
             livePreview: {
                 enabled: true,
-                widgetClass: 'markdown-line-widget markdown'
             },
             
             search: {
@@ -186,36 +149,36 @@ class Editor {
      */
     async initializeComponents() {
         // Initialize live preview system
-        if (window.MarkdownLivePreview) {
+        if (window.EditorLivePreview) {
             try {
-                this.livePreview = new MarkdownLivePreview(this.cmEditor, this.options.livePreview);
+                this.livePreview = new EditorLivePreview(this.cmEditor, this.options.livePreview);
             } catch (error) {
-                this.showMessage('Failed to initialize MarkdownLivePreview', 'warning');
+                this.showMessage('Failed to initialize EditorLivePreview', 'warning');
             }
         } else {
-            this.showMessage('MarkdownLivePreview not available', 'warning');
+            this.showMessage('EditorLivePreview not available', 'warning');
         }
 
         // Initialize formatting system
-        if (window.MarkdownFormatter) {
+        if (window.EditorToolbar) {
             try {
-                this.formatter = new MarkdownFormatter(this.cmEditor);
+                this.formatter = new EditorToolbar(this.cmEditor);
             } catch (error) {
-                this.showMessage('Failed to initialize MarkdownFormatter', 'warning');
+                this.showMessage('Failed to initialize EditorToolbar', 'warning');
             }
         } else {
-            this.showMessage('MarkdownFormatter not available', 'warning');
+            this.showMessage('EditorToolbar not available', 'warning');
         }
 
         // Initialize search system
-        if (window.EditorSearcher) {
+        if (window.SearchBar) {
             try {
-                this.searcher = new EditorSearcher(this.cmEditor, this.options.search);
+                this.searcher = new SearchBar(this.cmEditor, this.options.search);
             } catch (error) {
-                this.showMessage('Failed to initialize EditorSearcher', 'warning');
+                this.showMessage('Failed to initialize SearchBar', 'warning');
             }
         } else {
-            this.showMessage('EditorSearcher not available', 'warning');
+            this.showMessage('SearchBar not available', 'warning');
         }
     }
 
@@ -226,15 +189,20 @@ class Editor {
         // Content change handling
         this.cmEditor.on('change', (cm, change) => {
             if (this.options.onContentChange) {
-                this.options.onContentChange(cm.getValue(), change);
+                //this.options.onContentChange(cm.getValue(), change);
             }
         });
 
         // Cursor activity for live preview
         this.cmEditor.on('cursorActivity', (cm) => {
             if (this.livePreview && this.livePreview.enabled) {
-                this.livePreview.updatePreview();
+                //this.livePreview.updatePreview();
             }
+        });
+
+        // Handle clicks on the editor - important for live preview cursor positioning
+        this.cmEditor.on('mousedown', (cm, event) => {
+            this.handleEditorClick(cm, event);
         });
 
         // Setup toolbar event handling
@@ -242,6 +210,96 @@ class Editor {
         
         // Setup search toolbar event handling
         this.setupSearchEvents();
+    }
+
+    /**
+     * Handle clicks on the editor, especially for live preview widgets
+     */
+    handleEditorClick(cm, event) {
+        // Get the clicked position
+        const pos = cm.coordsChar({left: event.clientX, top: event.clientY});
+        
+        if (!this.livePreview) return;
+        
+        // Check if we clicked on a widget (rendered content)
+        const clickedElement = event.target;
+        const widgetElement = clickedElement.closest('.markdown-widget');
+        
+        if (widgetElement) {
+            // We clicked on a rendered widget
+            // Find which line this widget corresponds to
+            const lineNumber = this.findLineNumberFromWidget(widgetElement);
+            
+            if (lineNumber !== -1) {
+                // Clear the widget to show raw content and position cursor
+                const lineHandle = cm.getLineHandle(lineNumber);
+                this.livePreview.clearLineMarker(lineHandle);
+                
+                // Position cursor at the beginning of the line
+                // You can adjust this logic based on where in the widget was clicked
+                const cursorPos = this.determineCursorPosition(event, lineNumber, widgetElement);
+                cm.setCursor(lineNumber, cursorPos);
+                
+                // Ensure the editor has focus
+                cm.focus();
+                
+                // Prevent default click behavior
+                event.preventDefault();
+                return;
+            }
+        }
+        
+        // Normal click handling - ensure cursor positioning works correctly
+        // This is especially important when clicking near widget boundaries
+        setTimeout(() => {
+            const actualPos = cm.getCursor();
+            // Update live preview to reflect new cursor position
+            if (this.livePreview.currentCursorLine !== actualPos.line) {
+                // This will trigger the cursor activity handler in live preview
+                this.livePreview.setupCursorTracking();
+            }
+        }, 0);
+    }
+
+    /**
+     * Find the line number corresponding to a widget element
+     */
+    findLineNumberFromWidget(widgetElement) {
+        if (!this.livePreview) return -1;
+        
+        // Iterate through markers to find the one with this widget
+        for (let [lineHandle, marker] of this.livePreview.markers) {
+            const markerWidget = marker.replacedWith;
+            if (markerWidget === widgetElement) {
+                // Find the line number for this line handle
+                const lineInfo = this.cmEditor.lineInfo(lineHandle);
+                return lineInfo ? lineInfo.line : -1;
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * Determine cursor position based on where in the widget was clicked
+     */
+    determineCursorPosition(event, lineNumber, widgetElement) {
+        // Simple implementation: position at start of line
+        // You can enhance this to be more precise based on click position
+        
+        const rect = widgetElement.getBoundingClientRect();
+        const clickX = event.clientX - rect.left;
+        const widgetWidth = rect.width;
+        
+        // Get the raw line content
+        const lineContent = this.cmEditor.getLine(lineNumber);
+        
+        // Estimate character position based on click position
+        // This is a rough approximation - you might want to make it more accurate
+        const relativePosition = clickX / widgetWidth;
+        const estimatedCharPosition = Math.round(relativePosition * lineContent.length);
+        
+        // Ensure position is within line bounds
+        return Math.max(0, Math.min(estimatedCharPosition, lineContent.length));
     }
 
     /**
@@ -301,7 +359,7 @@ class Editor {
      */
     setupSearchEvents() {
         if (!this.searcher) {
-            this.showMessage('EditorSearcher not available for search events', 'warning');
+            this.showMessage('SearchBar not available for search events', 'warning');
             return;
         }
 
@@ -309,7 +367,6 @@ class Editor {
         // Find input - real-time search
         const findInput = document.getElementById('editor-find-input');
         if (findInput) {
-            console.log('Setting up find input events');
             findInput.addEventListener('input', (e) => {
                 const query = e.target.value;
                 if (query) {
@@ -329,14 +386,10 @@ class Editor {
                     }
                 }
             });
-        } else {
-            this.showMessage('Editor find input not found', 'warning');
         }
-
         // Replace input
         const replaceInput = document.getElementById('editor-replace-input');
         if (replaceInput) {
-            console.log('Setting up replace input events');
             replaceInput.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') {
                     e.preventDefault();
@@ -348,14 +401,10 @@ class Editor {
                     }
                 }
             });
-        } else {
-            console.warn('Replace input not found');
         }
-
         // Search navigation buttons
         const findNext = document.getElementById('find-next');
         if (findNext) {
-            console.log('Setting up find next button');
             findNext.addEventListener('click', () => {
                 const query = findInput?.value;
                 if (query) {
@@ -363,13 +412,9 @@ class Editor {
                     this.searcher.findNext();
                 }
             });
-        } else {
-            console.warn('Find next button not found');
         }
-
         const findPrev = document.getElementById('find-prev');
         if (findPrev) {
-            console.log('Setting up find previous button');
             findPrev.addEventListener('click', () => {
                 const query = findInput?.value;
                 if (query) {
@@ -377,14 +422,10 @@ class Editor {
                     this.searcher.findPrevious();
                 }
             });
-        } else {
-            console.warn('Find previous button not found');
         }
-
         // Replace buttons
         const replaceBtn = document.getElementById('replace-btn');
         if (replaceBtn) {
-            console.log('Setting up replace button');
             replaceBtn.addEventListener('click', () => {
                 const query = findInput?.value;
                 const replacement = replaceInput?.value || '';
@@ -393,13 +434,9 @@ class Editor {
                     this.searcher.replaceNext(replacement);
                 }
             });
-        } else {
-            console.warn('Replace button not found');
         }
-
         const replaceAllBtn = document.getElementById('replace-all-btn');
         if (replaceAllBtn) {
-            console.log('Setting up replace all button');
             replaceAllBtn.addEventListener('click', () => {
                 const query = findInput?.value;
                 const replacement = replaceInput?.value || '';
@@ -409,21 +446,15 @@ class Editor {
                     this.showMessage(`Replaced ${count} occurrences`, 'success', 2000);
                 }
             });
-        } else {
-            console.warn('Replace all button not found');
         }
-
         // Close search
         const closeSearch = document.getElementById('close-search');
         if (closeSearch) {
-            console.log('Setting up close search button');
             closeSearch.addEventListener('click', () => {
                 if (findInput) findInput.value = '';
                 if (replaceInput) replaceInput.value = '';
                 this.searcher.clearSearch();
             });
-        } else {
-            console.warn('Close search button not found');
         }
     }
 
@@ -434,13 +465,13 @@ class Editor {
         const extraKeys = {
             // Search and replace shortcuts
             "Ctrl-F": (cm) => {
-                const findInput = document.getElementById('find-input');
+                const findInput = document.getElementById('editor-find-input');
                 if (findInput) {
                     findInput.focus();
                 }
             },
             "Ctrl-H": (cm) => {
-                const replaceInput = document.getElementById('replace-input');
+                const replaceInput = document.getElementById('editor-replace-input');
                 if (replaceInput) {
                     replaceInput.focus();
                 }
@@ -484,23 +515,9 @@ class Editor {
         const currentExtraKeys = this.cmEditor.getOption('extraKeys') || {};
         this.cmEditor.setOption('extraKeys', { ...currentExtraKeys, ...extraKeys });
     }
-
-    /**
-     * CONTENT MANAGEMENT METHODS
-     */
-
-    /**
-     * Get current editor content
-     * @returns {string} Current editor content
-     */
     getValue() {
         return this.cmEditor ? this.cmEditor.getValue() : '';
     }
-
-    /**
-     * Set editor content
-     * @param {string} content - Content to set
-     */
     setValue(content) {
         if (this.cmEditor) {
             this.cmEditor.setValue(content || '');
@@ -508,33 +525,20 @@ class Editor {
             this.cmEditor.clearHistory();
             
             if (this.livePreview) {
-                this.livePreview.updatePreview();
+                this.livePreview.initPreview();
             }
             
             this.lastSavedContent = content || '';
         }
     }
-
-    /**
-     * Check if content has been modified
-     * @returns {boolean} True if content is modified
-     */
     isModified() {
         return this.getValue() !== this.lastSavedContent;
     }
-
-    /**
-     * Focus the editor
-     */
     focus() {
         if (this.cmEditor) {
             this.cmEditor.focus();
         }
     }
-
-    /**
-     * Save current content
-     */
     save() {
         const content = this.getValue();
         this.lastSavedContent = content;
@@ -549,16 +553,7 @@ class Editor {
         }
     }
 
-    /**
-     * UTILITY METHODS
-     */
 
-    /**
-     * Show message in toolbar
-     * @param {string} text - Message text
-     * @param {string} type - Message type (success, fail, info, warning)
-     * @param {number} duration - Duration in milliseconds
-     */
 
     /**
      * Toggle live preview on/off
@@ -586,13 +581,6 @@ class Editor {
         };
     }
 
-    /**
-     * CLEANUP AND DESTRUCTION
-     */
-
-    /**
-     * Destroy the editor and clean up resources
-     */
     destroy() {
         // Clean up components
         if (this.livePreview && this.livePreview.destroy) {

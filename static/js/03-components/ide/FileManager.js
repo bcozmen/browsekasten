@@ -24,6 +24,9 @@ class FileManager {
         // Storage key for folder states
         this.folderStateKey = 'fileManager_folderStates';
         
+        // Storage key for active file
+        this.activeFileKey = 'fileManager_activeFile';
+        
         // Initialize
         this.init();
     }
@@ -377,6 +380,7 @@ class FileManager {
             this.selectFile(fileElement);
             if (fileElement.dataset.type === 'zettel') {
                 this.activeFile = fileElement;
+                this.saveActiveFile(); // Save active file to localStorage
                 this.emit('file-manager:fileSelected', fileElement);
             }
             if (fileElement.dataset.type === 'folder') {
@@ -468,18 +472,6 @@ class FileManager {
             fileElement.classList.add('file-selected');
             this.selectedFiles.push(fileElement);
         }
-        console.log('Selected files:', this.selectedFiles.map(f => {
-           if (f.dataset.type === 'zettel') {
-               return 'zettel ' + `${f.dataset.id}`;
-           }
-           else if (f.dataset.type === 'folder') {
-               return 'folder ' + `${f.dataset.folderId}`;
-           }
-           else if (f.dataset.type === 'file') {
-               return 'file ' + `${f.dataset.id}`;
-           }
-            return f.dataset.id;
-        }));
     }
 
     clearFileSelection() {
@@ -935,6 +927,7 @@ class FileManager {
         // Handle activeFile cleanup
         if (willDeleteActiveFile && itemsToDelete.includes(this.activeFile)) {
             this.activeFile = null;
+            this.clearActiveFile(); // Clear from localStorage
         }
 
         // Handle parentFolder cleanup
@@ -1078,9 +1071,90 @@ class FileManager {
     }
 
     /**
-     * Save the current state of all folders (expanded/retracted) to localStorage
-     * This method is also exposed publicly for external calls
+     * Save the current active file to localStorage
      */
+    saveActiveFile() {
+        try {
+            if (this.activeFile && this.activeFile.dataset.type === 'zettel') {
+                const activeFileData = {
+                    id: this.activeFile.dataset.id,
+                    type: this.activeFile.dataset.type
+                };
+                localStorage.setItem(this.activeFileKey, JSON.stringify(activeFileData));
+            } else {
+                // Clear if no active file or not a zettel
+                this.clearActiveFile();
+            }
+        } catch (error) {
+            console.warn('Failed to save active file:', error);
+        }
+    }
+
+    /**
+     * Restore the active file from localStorage
+     */
+    restoreActiveFile() {
+        try {
+            const savedActiveFile = localStorage.getItem(this.activeFileKey);
+            if (!savedActiveFile) {
+                return; // No saved active file
+            }
+
+            const activeFileData = JSON.parse(savedActiveFile);
+            
+            // Find the file element by ID and type
+            if (activeFileData.type === 'zettel') {
+                const fileElement = this.container.querySelector(`[data-type="zettel"][data-id="${activeFileData.id}"]`);
+                if (fileElement) {
+                    // Restore active file and select it
+                    this.activeFile = fileElement;
+                    this.clearFileSelection();
+                    this.selectFile(fileElement);
+                    
+                    // Set parent folder to the folder containing this file
+                    const parentFolder = this.getParentFolder(fileElement);
+                    if (parentFolder) {
+                        this.setParentFolder(parentFolder);
+                    }
+                    
+                    // Emit the file selected event
+                    this.emit('file-manager:fileSelected', fileElement);
+                } else {
+                    // File no longer exists, clear the saved state
+                    this.clearActiveFile();
+                }
+            }
+        } catch (error) {
+            console.warn('Failed to restore active file:', error);
+            // Clear corrupted data
+            this.clearActiveFile();
+        }
+    }
+
+    /**
+     * Clear the saved active file from localStorage
+     */
+    clearActiveFile() {
+        try {
+            localStorage.removeItem(this.activeFileKey);
+        } catch (error) {
+            console.warn('Failed to clear active file:', error);
+        }
+    }
+
+    /**
+     * Get the currently saved active file data
+     * @returns {Object|null} Active file data or null if none saved
+     */
+    getSavedActiveFile() {
+        try {
+            const savedActiveFile = localStorage.getItem(this.activeFileKey);
+            return savedActiveFile ? JSON.parse(savedActiveFile) : null;
+        } catch (error) {
+            console.warn('Failed to get saved active file:', error);
+            return null;
+        }
+    }
     saveFolderStates() {
         try {
             const folderStates = {};

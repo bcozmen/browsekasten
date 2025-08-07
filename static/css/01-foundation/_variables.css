@@ -201,6 +201,8 @@
   --focus-ring-offset: 2px;
   --focus-ring-color: var(--color-tertiary-500);
   --focus-ring: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
+
+  --nav-height : 75px;
 }
 
 /* Dark Theme - Beautiful dark mode with proper contrast */

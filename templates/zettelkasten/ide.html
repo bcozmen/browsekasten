@@ -26,18 +26,20 @@
 <script type="module" src="{% static 'js/02-core/dom.js' %}"></script>
 <script src="{% static 'js/02-core/api.js' %}"></script>
 
+<!-- External Dependencies -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/turndown/dist/turndown.min.js"></script>
+
 <!-- IDE System Components -->
-<script src="{% static 'js/03-components/ide/markdown-live-preview.js' %}"></script>
-<script src="{% static 'js/03-components/ide/markdown-formatter.js' %}"></script>
-<script src="{% static 'js/03-components/ide/editor-search.js' %}"></script>
+<script src="{% static 'js/03-components/ide/EditorLivePreview.js' %}"></script>
+<script src="{% static 'js/03-components/ide/EditorToolbar.js' %}"></script>
+<script src="{% static 'js/03-components/ide/SearchBar.js' %}"></script>
 <script src="{% static 'js/03-components/ide/FileManager.js' %}"></script>
 <script src="{% static 'js/03-components/ide/Resizer.js' %}"></script>
 <script src="{% static 'js/03-components/ide/Editor.js' %}"></script>
 <script src="{% static 'js/03-components/ide/IDEController.js' %}"></script>
 
-<!-- External Dependencies -->
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/turndown/dist/turndown.min.js"></script>
+
 
 <!-- Initialize IDE -->
 <script>
@@ -47,9 +49,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const requiredGlobals = [
             'CodeMirror',
             'marked',
-            'MarkdownLivePreview',
-            'MarkdownFormatter', 
-            'EditorSearcher',
+            'EditorLivePreview',
+            'EditorToolbar', 
+            'SearchBar',
             'Editor',
             'FileManager',
             'Resizer',

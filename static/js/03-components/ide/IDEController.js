@@ -27,6 +27,7 @@ class IDEController {
         } catch (error) {
             console.error('Failed to initialize IDEController:', error);
         }
+        this.fileManager.restoreActiveFile(); // Restore active file after initialization
     }
 
     initializeComponents() {
@@ -50,42 +51,19 @@ class IDEController {
         }
         
         try {
-            this.editor = new Editor('code-editor', {
-                onSave: (content) => {
-                    this.handleEditorSave(content);
-                },
-                onContentChange: (content, change) => {
-                    this.handleContentChange(content, change);
-                },
-                onReady: (editor) => {
-                    console.log('Editor ready and initialized');
-                }
-            });
+            this.editor = new Editor('code-editor');
         } catch (error) {
             console.error('Failed to initialize editor:', error);
         }
     }
 
-    handleEditorSave(content) {
-        // Handle save request from editor
-        if (this.currentFile && this.currentFile.id) {
-            this.saveFileContent(this.currentFile.id, content);
-        } else {
-            this.showMessage('No file selected to save', 'warning', 3000);
-        }
-    }
 
-    handleContentChange(content, change) {
-        // Handle content changes (could be used for auto-save, etc.)
-        // For now, just track that content has changed
-    }
 
     setupEventHandlers() {
         // File manager integration
         if (this.fileManager) {
             // Listen for file selection events
             this.fileManager.container.addEventListener('file-manager:fileSelected', (e) => {
-                console.log('File selected:', e.detail.dataset.id);
                 this.currentFile = e.detail;
                 this.loadFileContent(e.detail.dataset.id);
             });
@@ -112,7 +90,7 @@ class IDEController {
             }
             
             // Update editor with file content
-            this.updateEditor(data.content, data.name);
+            this.loadEditorContent(data.content, data.name);
 
             // Store current file state
             this.currentFile = {
@@ -129,7 +107,7 @@ class IDEController {
         } 
     }
 
-    updateEditor(content, filename) {
+    loadEditorContent(content, filename) {
         // Check if editor is available
         if (this.editor && this.editor.cmEditor) {
             // Set the content in the editor
@@ -138,25 +116,10 @@ class IDEController {
             // Focus the editor
             this.editor.focus();
             
-        } else if (window.cmEditor) {
-            // Fallback to global CodeMirror editor if available
-            window.cmEditor.setValue(content || '');
-            window.cmEditor.setCursor(0, 0);
-            window.cmEditor.clearHistory();
-            
-            if (window.livePreview) {
-                window.livePreview.updatePreview();
-            }
-            
-            window.cmEditor.focus();
         } else {
             console.warn('No editor available to update content');
         }
     }
-
-
-
-
 
 
     saveFile(fileId, content) {

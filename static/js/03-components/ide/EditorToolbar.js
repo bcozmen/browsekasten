@@ -27,7 +27,7 @@
  * Encapsulates all markdown formatting functionality in a reusable class.
  * This approach provides better organization and allows for configuration.
  */
-class MarkdownFormatter {
+class EditorToolbar {
     /**
      * CONSTRUCTOR: Initialize the formatter with an editor instance
      * 
@@ -309,10 +309,10 @@ class MarkdownFormatter {
 
 // Export for module systems
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = MarkdownFormatter;
+    module.exports = EditorToolbar;
 }
 
 // Global export for browser
 if (typeof window !== 'undefined') {
-    window.MarkdownFormatter = MarkdownFormatter;
+    window.EditorToolbar = EditorToolbar;
 }

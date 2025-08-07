@@ -4,7 +4,7 @@
     flex: 1;
     display: flex;
     height: 100%;
-    overflow : auto; /* Allow scrolling if content overflows */
+    overflow: auto; /* Allow scrolling if content overflows */
     flex-direction: column;
 }
 
@@ -16,6 +16,12 @@
 .file-manager::-webkit-scrollbar-thumb {
     background-color: var(--color-primary-300);
     border-radius: 4px;
+}
+
+/* Firefox scrollbar */
+.file-manager {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-primary-300) var(--card-bg);
 }
 
 

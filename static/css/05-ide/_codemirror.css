@@ -1,153 +1,157 @@
 /* Your custom theme */
-.cm-s-mytheme.CodeMirror {
+.CodeMirror {
     width: 100%;
-    height: 100%;
+    height: 100vh; /* Fixed viewport height */
+    max-height: 100vh; /* Prevent growing beyond viewport */
     color: var(--text-primary);
     background-color: var(--card-bg);
     font-family: var(--font-family-mono);
     font-size: var(--font-size-base);
-    line-height: var(--line-height-normal);
+    line-height: var(--line-height-tight);
     word-wrap: break-word;
     white-space: pre-wrap;
+    scrollbar-color: var(--color-primary-300) var(--card-bg);
 }
+
+
 
 /* Line numbers */
-.cm-s-mytheme .CodeMirror-linenumber {
+.CodeMirror-linenumber {
     color: var(--text-secondary);
     font-size: var(--font-size-sm);
-    padding: 0 var(--spacing-2);
 }
 
-.cm-s-mytheme .CodeMirror-gutters {
+
+.CodeMirror-gutters {
     background-color: var(--page-bg);
     border-right: 1px solid var(--border-light);
 }
 
 /* Cursor */
-.cm-s-mytheme .CodeMirror-cursor {
+.CodeMirror-cursor {
     border-left: 2px solid var(--color-primary-200);
 }
 
 /* Active line */
-.cm-s-mytheme .CodeMirror-activeline-background {
+.CodeMirror-line {
+    width: 100% !important;
+    min-width: 100% !important;
+    max-width: none !important;
+    flex: 1 1 auto; /* grow and shrink horizontally, auto height */
+    display: flex;
+    box-sizing: border-box;
+    min-height: 0; /* shrink as much as possible vertically */
+    height: auto; /* let content determine minimal height */
+}
+
+/* Ensure line content fills width */
+.CodeMirror-line > span {
+    width: 100% !important;
+    min-width: 100% !important;
+    flex: 1 1 auto;
+}
+.CodeMirror-activeline-background {
     background-color: var(--page-bg)
 }
 
 /* Matching brackets */
-.cm-s-mytheme .CodeMirror-matchingbracket {
+.CodeMirror-matchingbracket {
     color: var(--editor-coral) !important;
     background: rgba(254, 188, 153, 0.2); /* var(--editor-peach) with transparency */
     font-weight: bold;
     border-radius: var(--radius-base);
 }
 
-/* Markdown headers */
-.cm-s-mytheme span.cm-header {
-    color: var(--editor-pink);
-    font-weight: var(--font-weight-bold);
-    font-size: var(--font-size-lg);
-}
 
-/* Bold text */
-.cm-s-mytheme span.cm-strong {
-    color: var(--text-primary);
-    font-weight: var(--font-weight-bold);
-    background: rgba(254, 188, 153, 0.15); /* var(--editor-peach) subtle highlight */
-    border-radius: var(--radius-sm);
-}
-
-/* Italic text */
-.cm-s-mytheme span.cm-em {
-    color: var(--editor-teal);
-    font-style: italic;
-}
-
-/* Code blocks and inline code */
-.cm-s-mytheme span.cm-comment {
-    color: var(--color-tertiary-600);
-    background: var(--editor-light-bg);
-    font-family: var(--font-family-mono);
-    border-radius: var(--radius-base);
-    padding: var(--spacing-0-5) var(--spacing-1);
-}
-
-/* Links */
-.cm-s-mytheme span.cm-link {
-    color: var(--editor-teal);
-    text-decoration: underline;
-}
-
-/* Fenced code blocks */
-.cm-s-mytheme span.cm-string {
-    color: var(--color-tertiary-700);
-    background: rgba(106, 204, 191, 0.1); /* var(--editor-teal) with transparency */
-    border-radius: var(--radius-base);
-}
-
-/* Lists and bullets */
-.cm-s-mytheme span.cm-variable-2 {
-    color: var(--editor-coral);
-    font-weight: var(--font-weight-medium);
-}
-
-/* Quote blocks */
-.cm-s-mytheme span.cm-quote {
-    color: var(--color-tertiary-500);
-    font-style: italic;
-    border-left: 3px solid var(--editor-peach);
-    padding-left: var(--spacing-2);
-}
-
-/* Keywords and special markdown syntax */
-.cm-s-mytheme span.cm-keyword {
-    color: var(--editor-coral);
-    font-weight: var(--font-weight-medium);
-}
-
-/* Selection */
-.cm-s-mytheme .CodeMirror-selected {
-    background: var(--editor-selection)
-}
-
-/* Search highlight */
-.cm-s-mytheme .CodeMirror-searching {
-    background: rgba(254, 188, 153, 0.4); /* var(--editor-peach) for search */
-}
-
-/* Scrollbar styling */
-.cm-s-mytheme.CodeMirror ::-webkit-scrollbar {
+.CodeMirror::-webkit-scrollbar {
     width: 8px;
-    height: 8px;
+    background-color: var(--card-bg);
 }
 
-.cm-s-mytheme.CodeMirror ::-webkit-scrollbar-thumb {
-    background-color: var(--color-primary-300);
-    border-radius: 4px;
+.CodeMirror::-webkit-scrollbar-thumb {
+    background-color: var(--color-primary-300) var(--card-bg);
 }
 
-.cm-s-mytheme.CodeMirror ::-webkit-scrollbar-track {
-    background-color: var(--page-bg);
+
+
+/* Comprehensive heading styles for CodeMirror syntax highlighting */
+.CodeMirror .cm-header {
+    font-family: var(--font-family-heading);
+    font-weight: var(--font-weight-bold);
+    line-height: var(--line-height-tight);
+    text-shadow: var(--text-shadow-sm);
+    color: var(--text-secondary);
+
+    width: 100%;
+    display: block;
+
+    margin : 0;
+    padding : 0;
+
+}
+.CodeMirror .cm-header-1 {
+    color: var(--text-heading);
+    font-size: var(--font-size-5xl);
+    border-bottom: 1px solid var(--text-heading);
 }
 
-/* Firefox scrollbar */
-.cm-s-mytheme.CodeMirror {
-    scrollbar-width: thin;
-    scrollbar-color: var(--color-primary-300) var(--page-bg);
+.CodeMirror .cm-header-2 {font-size: var(--font-size-3xl);}
+.CodeMirror .cm-header-3 {font-size: var(--font-size-2xl);}
+.CodeMirror .cm-header-4 {font-size: var(--font-size-xl);}
+.CodeMirror .cm-header-5 {font-size: var(--font-size-lg);}
+.CodeMirror .cm-header-6 {font-size: var(--font-size-base);}
+
+.CodeMirror .cm-header-2, .cm-header-3 {
+    border-bottom: 1px solid var(--text-secondary);
+}
+.CodeMirror blockquote {
+    padding: 0;
+    margin: 0;
 }
 
-/* Line wrapping styles */
-.cm-s-mytheme .CodeMirror-wrap {
+
+/* All content within markdown widgets */
+.markdown-widget * {
+    max-width: 100% !important;
+    box-sizing: border-box;
     word-wrap: break-word;
-    white-space: pre-wrap;
+    height : auto !important;
+
+    margin : 0;
+    padding : 0;
 }
 
-.cm-s-mytheme .CodeMirror-lines {
-    word-wrap: break-word;
-    white-space: pre-wrap;
+
+
+.markdown-widget h1{
+    border-bottom: 1px solid var(--text-heading);
+}
+.markdown-widget h2, .markdown-widget h3 {
+    border-bottom: 1px solid var(--text-secondary);
 }
 
-.cm-s-mytheme .CodeMirror-line {
-    word-wrap: break-word;
-    white-space: pre-wrap;
-    overflow-wrap: break-word;
+
+
+.markdown-widget ul, .markdown-widget ol { 
+    padding-left: var(--spacing-4); 
+}
+
+.markdown-widget li { 
+}
+
+.markdown-widget blockquote { 
+    font-size: var(--font-size-base);
+    padding-left : var(--spacing-3);
+    border-left: 3px solid var(--border-light);
+}
+
+.markdown-widget pre { 
+    padding: var(--spacing-2);
+    background: var(--page-bg);
+    border-radius: var(--radius-base);
+    overflow-x: auto;
+}
+
+.markdown-widget code { 
+    word-break: break-all; 
 }

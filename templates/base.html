@@ -16,55 +16,37 @@
 </head>
 
 <body>
-    
-    <div class = "upload-form">
-        <div class = "card">
-            <div class="card-header">
-            <h2 class="card-title">Upload Files</h2>
-            <p class="card-subtitle">Please upload files or folder</p>
-            </div>
-            
-            <form id="upload-form" enctype="multipart/form-data">
-                {% csrf_token %}
-                <input type="file" name="files" id="file-input" multiple>
-                <button type="submit">Upload</button>
-            </form>
-            <div id="upload-progress"></div>
-        </div>
-    </div>
-    
     <!-- Navigation Menu -->
     <nav>
-        <div class="navbar-left">
-            <a href="/" class="icon">BrowseKasten</a>
-        </div>
-        <div class="navbar-mid responsive-container">
-            <ul >
-                <li class = "navbar-btn"><a href="/account/">Account</a></li>
-                <li  class = "navbar-btn"><a href="/zettelkasten/">Zettelkasten</a></li>
-                <li class = "navbar-btn"><a  href="/blog/">Blog</a></li>
-                <li class = "navbar-btn"><a href="/graph/">Network</a></li>
-                
-            </ul>
-        </div>
-        <div class = "navbar-right">
-            {% if request.user.is_authenticated %}
-                <span>Hello {{ request.user.first_name|default:request.user.username }}</span>
+        <div class="nav-container max-width-container-big">
+            <div class="navbar-left">
+                <a href="/" class="icon">NoteDown</a>
+            </div>
+            <div class="navbar-mid max-width-container">
                 <ul>
-                    
-                    <li class="navbar-btn">
-                        <form action="{% url "logout" %}" method="post">
-                            {% csrf_token %}
-                            <button type="submit">Logout</button>
-                        </form>
-                    </li>
+                    <li><a class="btn nav-btn" href="/account/">Account</a></li>
+                    <li><a class="btn nav-btn" href="/zettelkasten/">Editor</a></li>
+                    <li><a class="btn nav-btn" href="/blog/">Blog</a></li>
                 </ul>
-            {% else %}
-                <ul class="navbar-right-links">
-                    <li class="navbar-btn" ><a href="{% url 'login' %}">Log in</a></li>
-                    <li class="navbar-btn"><a href="{% url 'register' %}">Register</a></li>
-                </ul>
-            {% endif %}
+            </div>
+            <div class = "navbar-right">
+                {% if request.user.is_authenticated %}
+                    <span style="padding-right: var(--spacing-2)">Hello {{ request.user.first_name|default:request.user.username }}</span>
+                    <ul>
+                        <li >
+                            <form action="{% url "logout" %}" method="post">
+                                {% csrf_token %}
+                                <button class = "btn" type="submit">Logout</button>
+                            </form>
+                        </li>
+                    </ul>
+                {% else %}
+                    <ul class="navbar-right-links">
+                        <li  ><a class = "btn" href="{% url 'login' %}">Log in</a></li>
+                        <li><a class = "btn" href="{% url 'register' %}">Register</a></li>
+                    </ul>
+                {% endif %}
+            </div>
         </div>
     </nav>
 

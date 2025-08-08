@@ -1,0 +1,29 @@
+.error-text {
+    color: var(--color-text-red);
+}
+
+.warning-text {
+    color: var(--color-text-orange);
+}
+
+.success-text {
+    color: var(--color-success-green);
+}
+.info-text {
+    color: var(--color-text-blue);
+}
+.error-card {
+    background-color: var(--color-accent-red);
+}
+
+.warning-card {
+    background-color: var(--color-accent-orange);
+}
+
+.success-card {
+    background-color: var(--color-accent-green);
+}
+
+.info-card {
+    background-color: var(--color-accent-blue);
+}

@@ -7,51 +7,51 @@
             <h2>Create an account</h2>
             <p>Please, sign up using the following form:</p>
         </div>
-        <form method="post" class="form-group">
-            {% csrf_token %}
-            
+        <div class = "card">    
+            <form method="post">
+                {% csrf_token %}
+                
 
-            <div class="form-group-div">
-                {{ user_form.username.label_tag }}
-                {{ user_form.username }}
-                {% if user_form.username.errors %}
-                    <div style="color: var(--color-accent-error)">{{ user_form.username.errors }}</div>
-                {% endif %}
-            </div>
-            <div class="form-group-div">
-                {{ user_form.first_name.label_tag }}
-                {{ user_form.first_name }}
-                {% if user_form.first_name.errors %}
-                    <div style="color: var(--color-accent-error)">{{ user_form.first_name.errors }}</div>
-                {% endif %}
-            </div>
-            <div class="form-group-div">
-                {{ user_form.email.label_tag }}
-                {{ user_form.email }}
-                {% if user_form.email.errors %}
-                    <div style="color: var(--color-accent-error)">{{ user_form.email.errors }}</div>
-                {% endif %}
-            </div>
-            <div class="form-group-div">
-                {{ user_form.password.label_tag }}
-                {{ user_form.password }}
-                {% if user_form.password.errors %}
-                    <div style="color: var(--color-accent-error)">{{ user_form.password.errors }}</div>
-                {% endif %}
-            </div>
-            <div class="form-group-div">
-                {{ user_form.password2.label_tag }}
-                {{ user_form.password2 }}
-                {% if user_form.password2.errors %}
-                    <div style="color: var(--color-accent-error)">{{ user_form.password2.errors }}</div>
-                {% endif %}
-            </div>
-            <div>
-                <button type="submit" >Create my account</button>
-            </div>
-        </form>
-        <div class="form-after">
-            <p>Already have an account? <a href="{% url 'login' %}">Log in</a></p>
+                <div class="card-form">
+                    <p>{{ user_form.username.label_tag }}</p>
+                    {{ user_form.username }}
+                    {% if user_form.username.errors %}
+                        <p class = "error-text">A user with that username already exists</p>
+                    {% endif %}
+                </div>
+                <div class="card-form">
+                    <p>{{ user_form.first_name.label_tag }}</p>
+                    {{ user_form.first_name }}
+                    {% if user_form.first_name.errors %}
+                        <p class = "error-text">This field is required.</p>
+                    {% endif %}
+                </div>
+                <div class="card-form">
+                    <p>{{ user_form.email.label_tag }}</p>
+                    {{ user_form.email }}
+                    {% if user_form.email.errors %}
+                        <p class = "error-text">This field is required.</p>
+                    {% endif %}
+                </div>
+                <div class="card-form">
+                    <p>{{ user_form.password.label_tag }}</p>
+                    {{ user_form.password }}
+                    {% if user_form.password.errors %}
+                        <p class = "error-text">{{ user_form.password.errors }}</p>
+                    {% endif %}
+                </div>
+                <div class="card-form">
+                    <p>{{ user_form.password2.label_tag }}</p>
+                    {{ user_form.password2 }}
+                    {% if user_form.password2.errors %}
+                        <p class = "error-text">{{ user_form.password2.errors }}</p>
+                    {% endif %}
+                </div>
+                <button type="submit" class = "btn" >Create my account</button>
+            </form>
         </div>
+        
+        <p>Already have an account? <a href="{% url 'login' %}">Log in</a></p>
+        
     </div>
 {% endblock %} 

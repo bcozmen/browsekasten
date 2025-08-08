@@ -1,20 +1,2 @@
-@import url('01-foundation/_variables.css');
-@import url('01-foundation/_main.css');
-@import url('01-foundation/_navbar.css');
-@import url('01-foundation/_typography.css');
-
-@import url('02-components/_cards.css');
-@import url('02-components/ui/_buttons.css');
-@import url('02-components/ui/_forms.css');
-
-
-/* @import url('03-pages/blog.css'); */  /* File doesn't exist - commented out */
-
-
-@import url('05-ide/_ide.css');
-@import url('05-ide/_file_manager.css');
-@import url('05-ide/_tool_bar.css');
-@import url('05-ide/_editor.css');
-@import url('05-ide/_codemirror.css');
-@import url('04-utilities/_responsive.css');
+@import url('./01-foundation/main.css');
 

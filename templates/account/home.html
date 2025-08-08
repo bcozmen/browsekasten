@@ -4,16 +4,15 @@
 
 {% block content %}
 <div class = "card" >
-        <div class="card-header">
-            <h1>Welcome to BrowseKasten</h1>
-            <h3>Your Web-based Zettelkasten</h3>
-        </div>  
+    <div class="card-header">
+        <h1>Welcome to NoteDown</h1>
+        <h3>Zettelkasten with NoteDown</h3>
+    </div>
 
-        
         {% if not request.user.is_authenticated %}
-            <div>
-                <a class = "btn" href="{% url 'login' %}">Get Started</a>
-                <a class = "btn btn2" href="{% url 'register' %}">Create Account</a>
+            <div class = "card card-horizontal">
+                <a class = "btn btn2" href="{% url 'login' %}">Get Started</a>
+                <a class = "btn" href="{% url 'register' %}">Create Account</a>
             </div>
         {% else %}
             <div>

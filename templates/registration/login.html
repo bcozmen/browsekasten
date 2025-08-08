@@ -6,7 +6,7 @@
         <div class="card-header">
             <h2>Log-in</h2>
             {% if form.errors %}
-                <p style="color: var(--color-accent-error)">
+                <p class="error-text">
                     Your username and password didn't match.
                     Please try again.
                 </p>
@@ -15,27 +15,26 @@
             {% endif %}
         </div>
 
-        <form class="form-group" method="post">
-            {% csrf_token %}
-            {% for field in form %}
-                <div class="form-group-div">
-                    {{ field.label_tag }}
-                    {{ field }}
-                    {% if field.errors %}
-                        <div style="color: var(--color-accent-error)">{{ field.errors }}</div>
-                    {% endif %}
-                </div>
-            {% endfor %}
+        <div class="card">
+            <form method="post">
+                {% csrf_token %}
+                {% for field in form %}
+                    <div class="card-form">
+                        <p>{{ field.label_tag }}</p>
+                        {{ field }}
+                        {% if field.errors %}
+                            <p class="error-text">{{ field.errors }}</p>
+                        {% endif %}
+                    </div>
+                {% endfor %}
 
-            
-            <input type="hidden" name="next" value="{{ next }}" />
-            <div>
-                <button type="submit">Log in</button>
-            </div>
-        </form>
-        <div class = "form-after">
-            <p><a href="{% url 'password_reset' %}">Forgotten your password?</a></p>
-            <p>If you don't have an account <a href="{% url 'register' %}">register here</a>.</p>
+                <input type="hidden" name="next" value="{{ next }}" />
+                <button type="submit" class="btn">Log in</button>
+            </form>
         </div>
+
+        <p><a href="{% url 'password_reset' %}">Forgotten your password?</a></p>
+        <p>If you don't have an account <a href="{% url 'register' %}">register here</a>.</p>
+
     </div>
 {% endblock %}

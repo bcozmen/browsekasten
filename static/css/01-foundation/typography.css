@@ -1,0 +1,63 @@
+
+
+
+html, body, h1, h2, h3, h4, h5,
+h, h1, h2, h3, h4, h5, p, a, small{
+    margin: 0;
+    padding: 0;
+    background-color: none;  
+    text-decoration: none;
+    
+    font-size: inherit;
+    font-weight: inherit;
+    line-height: inherit;
+    font-family: inherit;
+    color: inherit;
+}
+
+h1, h2, h3, h4, h5 {
+  font-family: 'Inter', sans-serif;
+  font-weight: bold;
+}
+
+h1 {
+  font-size: var(--font-size-h1); /* 48.8px */
+  color : var(--color-text-green);
+}
+h2 {
+  font-size: var(--font-size-h2); /* 39.04px */
+  color : var(--color-text-green);
+}
+h3 {font-size: var(--font-size-h3); /* 31.2px */}
+h4 {font-size: var(--font-size-h4); /* 24.96px */}
+h5 {font-size: var(--font-size-h5); /* 20px */}
+small {font-size: var(--font-size-xs); /* 12.8px */}
+
+a {
+  color: var(--color-text-link);
+}
+
+a:hover {
+  color: var(--color-text-link-hover);
+  transition: var(--transition);
+}
+
+/* Horizontal rule */
+hr {
+  border: none;
+}
+
+/* Code elements */
+code, pre {
+    font-family: var(--font-family-mono);
+    background: var(--color-background-secondary);
+}
+
+pre {
+    white-space: pre;
+}
+
+
+
+
+

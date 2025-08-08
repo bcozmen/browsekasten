@@ -1,0 +1,63 @@
+/* Import foundation files (same directory) */
+@import url('./variables.css');
+@import url('./typography.css');
+@import url('./navbar.css');      /* If you have one */
+
+@import url('./ui/buttons.css');      /* If you have one */
+@import url('./ui/forms.css');        /* If you have one */
+@import url('./ui/cards.css');        /* If you have one */
+@import url('./ui/alerts.css');        /* If you have one */
+@import url('https://fonts.googleapis.com/css?family=Inter:700|Inter:400');
+
+html {font-size: 100%;} /* 16px */
+html, body {
+  font-family: 'Inter', sans-serif;
+  font-weight: 400;
+  line-height: var(--line-height-normal);
+  color: var(--color-text-primary);
+  
+  background-color: var(--color-background-primary);
+  
+
+  padding: 0;
+  margin: 0;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  font-weight: 400;
+  height: 100vh;
+  width: 100vw;
+
+  display : flex;
+  flex-direction: column;
+  align-items: center;
+
+
+}
+
+nav {
+  width : 100%;
+  height: 60px ;
+  font-weight: 300  ;
+}
+
+main {
+  flex: 1;
+  width: 100%;
+  overflow : none;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.max-width-container {
+  max-width: 800px;
+  width: 800px;
+}
+
+.max-width-container-big {
+  max-width: 1200px;
+  width: 1200px;
+}

@@ -1,0 +1,124 @@
+/*
+ * _cards.css
+ *
+ * This file should contain styles for card components, including containers and headers.
+ * Example:
+ * .card {
+ *   box-shadow: var(--shadow-md);
+ *   border-radius: var(--radius-lg);
+ * }
+ */
+
+.card {
+    background-color: var(--color-background-card);
+    box-shadow: var(--shadow);
+    border-radius: var(--radius-2xl);
+    border: 0.1px solid var(--color-border);
+
+    width : fit-content;
+    height: fit-content;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: justify;
+
+    padding : var(--spacing-6) var(--spacing-12);
+    max-width: 850px;
+}
+
+.card-header {
+    margin-bottom: var(--spacing-2);
+    text-align: center;
+}
+
+.card > .card {
+    box-shadow:  none;
+    border : none;
+}
+
+.card-horizontal {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+}
+
+
+.card h3,h4,h5,h6,p { margin : var(--spacing-2) var(--spacing-6); }
+.card h1 {    margin : var(--spacing-6);}
+.card h2 {    margin : var(--spacing-5) }
+.card h3 {    margin : var(--spacing-4) }
+.card h4 {    margin : var(--spacing-3) }
+
+.card a {
+    color: var(--color-text-link);
+    text-decoration: none;
+}
+
+.card a:hover {
+    color: var(--color-text-link-hover);
+    transition: var(--transition);
+}
+
+.card  form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+}
+.card-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    margin-bottom: var(--spacing-1);
+}
+
+.card-form p {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    margin-bottom: var(--spacing-2);
+    font-size: var(--font-size-s);
+
+}
+
+.card-form input {
+    max-width: 400px;
+    width: 100%;
+    min-width: 250px;
+    height : 25px;
+    padding: 0;
+    margin-bottom: var(--spacing-4);
+
+    
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-s);
+    background-color: var(--color-text-muted-2xl);
+    font-size: var(--font-size-s);
+
+    color : var(--color-text-secondary);
+    padding-left : 5px;
+    padding-right : 5px;
+
+    outline : none;
+}
+
+.card-form input:focus {
+    outline: none;
+    border-color: var(--color-border-focus);
+    box-shadow: var(--shadow);
+}
+
+.card-form input text {
+    color: var(--color-text-primary);
+}
+
+.card button {
+    margin-top : var(--spacing-8);
+}

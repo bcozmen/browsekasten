@@ -35,9 +35,6 @@ ALLOWED_HOSTS = ['browsekasten.bcozmen.xyz', 'localhost', '127.0.0.1']
 
 INSTALLED_APPS = [
     "account.apps.AccountConfig",
-    "zettelkasten.apps.ZettelkastenConfig",
-    "graph.apps.GraphConfig",
-    "blog.apps.BlogConfig",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",

@@ -1,0 +1,183 @@
+@import url('https://fonts.googleapis.com/css?family=Inter:700|Inter:400');
+
+
+:root {
+  -webkit-font-smoothing: auto;
+  -moz-osx-font-smoothing: auto;
+  /* === Colors === */
+  --color-background-primary : #ededed;
+  --color-background-card : #d6d6d6;
+  --color-background-secondary : #cccccc;
+
+
+  --color-text-primary : #333333;
+  --color-text-muted-s : #5c5c5c;
+  --color-text-muted : #797979;
+  --color-text-muted-l : #a1a1a1;
+  --color-text-muted-xl : #c5c5c5;
+  --color-text-muted-2xl : #e1e1e1;
+
+  --color-text-green : #066701;
+  --color-text-red : #930000;
+  --color-text-blue : #0970ba;
+  --color-text-orange : #c05c00;
+  --color-text-purple : #a03ac9;
+  --color-success-green : #3fc538;
+
+  --color-text-link : #308f1a;
+  --color-text-link-hover : #336427;
+
+  --color-accent-purple : #7867a6;
+  --color-accent-orange : #b3881a;
+  --color-accent-red : #a91919;
+  --color-accent-blue : #275cb2;
+  --color-accent-green : #226411;
+
+  --btn-hover-translate : translateY(-2px);
+  --color-button-green : #2e8529;
+  --color-button-green-hover : #37a032;
+  --color-button-text : #ededed;
+  
+  --color-accent-purple : #b4a8d7;
+  --color-accent-orange : #dcaf81;
+  --color-accent-red : #d89393;
+  --color-accent-blue : #9baecf;
+  --color-accent-green : #9cc18f; 
+
+  --color-border : #2e8529;
+  --color-border-focus : #3bb934;
+  /* === Font Families === */
+  --font-family-body: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-family-heading: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-family-mono: 'JetBrains Mono', 'Fira Code', Consolas, 'SF Mono', monospace;
+
+  /* === Font Sizes === */
+  --font-size-2xs : 0.6rem; /* 10px */
+  --font-size-xs : 0.75rem; /* 12px */
+  --font-size-s : 0.875rem; /* 14px */
+  --font-size: 1rem; /* 16px */
+  --font-size-h5 : 1.25rem; /* 20px */
+  --font-size-h4 : 1.563rem; /* 24.96px */
+  --font-size-h3 : 1.954rem; /* 31.2px */
+  --font-size-h2 : 2.442rem; /* 39.04px */
+  --font-size-h1 : 3.053rem; /* 48.8px */
+
+  /* === Font Weights === */
+  --line-height-xs: 1.25;      /* Tight spacing */
+  --line-height-s: 1.375;      /* Slightly tight */
+  --line-height: 1.5;      /* Standard - Perfect! */
+  --line-height-l: 1.625;   /* Comfortable reading */
+  --line-height-xl: 2;         /* Very spacious */
+
+    /* === Border Radius === */
+  --radius-none: 0;
+  --radius-s: 0.125rem;    /* 2px */
+  --radius: 0.25rem;   /* 4px */
+  --radius-l: 0.375rem;    /* 6px */
+  --radius-xl: 0.5rem;      /* 8px */
+  --radius-2xl: 0.75rem;     /* 12px */
+  --radius-3xl: 1rem;       /* 16px */
+  --radius-full: 9999px;    /* Fully rounded */
+
+  /* === Shadows === */
+  --shadow-s: 0 1px 2px 0 rgba(6, 30, 18, 0.05);
+  --shadow: 0 1px 3px 0 rgba(6, 30, 18, 0.1), 0 1px 2px 0 rgba(6, 30, 18, 0.06);
+  --shadow-l: 0 4px 6px -1px rgba(6, 30, 18, 0.1), 0 2px 4px -1px rgba(6, 30, 18, 0.06);
+  --shadow-xl: 0 10px 15px -3px rgba(6, 30, 18, 0.1), 0 4px 6px -2px rgba(6, 30, 18, 0.05);
+  --shadow-2xl: 0 20px 25px -5px rgba(6, 30, 18, 0.1), 0 10px 10px -5px rgba(6, 30, 18, 0.04);
+  --shadow-3xl: 0 25px 50px -12px rgba(6, 30, 18, 0.25);
+  --shadow-inner: inset 0 2px 4px 0 rgba(6, 30, 18, 0.06);
+
+  /* === Text Shadows === */
+  --text-shadow-s: 0 1px 2px rgba(6, 30, 18, 0.3);
+  --text-shadow: 0 1px 3px rgba(6, 30, 18, 0.4);
+  --text-shadow-l: 0 2px 4px rgba(6, 30, 18, 0.5);
+
+  /* === Spacing === */
+  --spacing-px: 1px;
+  --spacing-0: 0;
+  --spacing-0-5: 0.125rem;   /* 2px */
+  --spacing-1: 0.25rem;      /* 4px */
+  --spacing-1-5: 0.375rem;   /* 6px */
+  --spacing-2: 0.5rem;       /* 8px */
+  --spacing-2-5: 0.625rem;   /* 10px */
+  --spacing-3: 0.75rem;      /* 12px */
+  --spacing-3-5: 0.875rem;   /* 14px */
+  --spacing-4: 1rem;         /* 16px */
+  --spacing-5: 1.25rem;      /* 20px */
+  --spacing-6: 1.5rem;       /* 24px */
+  --spacing-7: 1.75rem;      /* 28px */
+  --spacing-8: 2rem;         /* 32px */
+  --spacing-9: 2.25rem;      /* 36px */
+  --spacing-10: 2.5rem;      /* 40px */
+  --spacing-12: 3rem;        /* 48px */
+  --spacing-14: 3.5rem;      /* 56px */
+  --spacing-16: 4rem;        /* 64px */
+  --spacing-20: 5rem;        /* 80px */
+  --spacing-24: 6rem;        /* 96px */
+  --spacing-32: 8rem;        /* 128px */
+
+    /* === Transitions === */
+  --transition-s: 150ms ease-out;
+  --transition: 200ms ease-out;
+  --transition-l: 300ms ease-out;
+  --transition-all: all 200ms ease-out;
+
+  
+}
+
+
+[data-theme="dark"]  {
+  /* === Dark Mode Colors === */
+  --color-background-primary : #1c1c1c;
+  --color-background-secondary : #282828;
+  --color-background-card : #323232;
+  
+  --color-text-primary : #e1e1e1;
+  --color-text-muted-s : #a1a1a1;
+  --color-text-muted : #978a8a;
+  --color-text-muted-l : #797979; 
+  --color-text-muted-xl : #5c5c5c;
+  --color-text-muted-2xl : #3c3c3c;
+
+  --color-text-green : #317a21;
+  --color-text-red : #e04f4f;
+  --color-text-blue : #3a94d4;
+  --color-text-orange : #d68336;
+  --color-text-purple : #a03ac9;
+
+  --color-text-link : #5cb649;
+  --color-text-link-hover : #b5cfaf;
+
+  --color-button-green : #183f16;
+  --color-button-green-hover : #266622;
+  --color-button-text : #ededed;
+
+  --color-button-green : #183f16;
+  --color-accent-purple : #382f52;
+  --color-accent-orange : #854f1a;
+  --color-accent-red : #661b1b;
+  --color-accent-blue : #1b2e4e;
+  --color-accent-green : #214315; 
+
+  --color-border : var(--color-text-muted-xl);
+
+
+  
+
+    /* === Enhanced Shadows for Dark Mode === */
+  --shadow-s: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.4), 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-l: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+  --shadow-xl: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+  --shadow-2xl: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
+  --shadow-3xl: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+  --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.3);
+
+  /* === Dark Mode Text Shadows === */
+  --text-shadow-s: 0 1px 2px rgba(0, 0, 0, 0.6);
+  --text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+  --text-shadow-l: 0 2px 4px rgba(0, 0, 0, 0.8);
+} 
+
+

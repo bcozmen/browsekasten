@@ -1,0 +1,33 @@
+.btn {
+  background-color: var(--color-button-green);
+  margin : 0 var(--spacing-2);
+  padding: var(--spacing-2) var(--spacing-4);
+
+  border : 0.5px solid var(--color-text-muted-s);
+  border-radius: var(--radius);
+
+  color : var(--color-button-text);
+  text-shadow: var(--text-shadow-s);
+  box-shadow: var(--shadow-s);
+
+  cursor: pointer;
+  
+}
+
+.btn2 {
+  background-color: var(--color-button-green-hover);
+}
+
+.nav-btn {
+  background: none;
+  color : var(--color-text-primary);
+  border : none;
+  box-shadow : none;
+}
+
+.btn:hover{
+  background-color: var(--color-button-green-hover);
+  color : var(--color-button-text);
+  transition: var(--transition);
+  transform : var(--btn-hover-translate);
+}
